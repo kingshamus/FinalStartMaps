@@ -1,7 +1,7 @@
 // Replace `<YOUR_NOMINATIM_ENDPOINT>` with the Nominatim API endpoint
 var nominatimEndpoint = 'https://nominatim.openstreetmap.org/search';
 // Replace `<YOUR_SMASHGG_API_ENDPOINT>` with the Smash.gg API endpoint
-var smashGGEndpoint = 'https://api.smash.gg/videogames';
+var smashGGEndpoint = 'cache.json';
 
 // Initialize the map
 var map = L.map('map').setView([0, 0], 2);
@@ -104,28 +104,20 @@ async function displayData(gameId) {
 // Fetch video games data for search bar autocomplete
 async function fetchVideoGames() {
     try {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://api.smash.gg/videogames?callback=handleVideoGamesResponse';
-            document.body.appendChild(script);
+        const response = await fetch(smashGGEndpoint);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
 
-            // Define the callback function to handle the response
-            window.handleVideoGamesResponse = function(response) {
-                if (response) {
-                    // Extract the list of video games from the response
-                    const videoGames = response.entities.videogame.map(game => ({
-                        id: game.id,
-                        name: game.name
-                    }));
-                    resolve(videoGames);
-                } else {
-                    reject(new Error('No data received from the server.'));
-                }
-                // Clean up
-                delete window.handleVideoGamesResponse;
-                document.body.removeChild(script);
-            };
-        });
+        // Extract the list of video games from the response
+        const videoGames = data.entities.videogame;
+
+        // Map over the list of video games to extract id and name fields
+        return videoGames.map(game => ({
+            id: game.id,
+            name: game.name
+        }));
     } catch (error) {
         console.error(`Error fetching video games data: ${error.message}`);
         throw error;
