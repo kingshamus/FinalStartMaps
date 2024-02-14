@@ -104,20 +104,28 @@ async function displayData(gameId) {
 // Fetch video games data for search bar autocomplete
 async function fetchVideoGames() {
     try {
-        const response = await fetch(smashGGEndpoint);
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://api.smash.gg/videogames?callback=handleVideoGamesResponse';
+            document.body.appendChild(script);
 
-        // Extract the list of video games from the response
-        const videoGames = data.entities.videogame;
-
-        // Map over the list of video games to extract id and name fields
-        return videoGames.map(game => ({
-            id: game.id,
-            name: game.name
-        }));
+            // Define the callback function to handle the response
+            window.handleVideoGamesResponse = function(response) {
+                if (response) {
+                    // Extract the list of video games from the response
+                    const videoGames = response.entities.videogame.map(game => ({
+                        id: game.id,
+                        name: game.name
+                    }));
+                    resolve(videoGames);
+                } else {
+                    reject(new Error('No data received from the server.'));
+                }
+                // Clean up
+                delete window.handleVideoGamesResponse;
+                document.body.removeChild(script);
+            };
+        });
     } catch (error) {
         console.error(`Error fetching video games data: ${error.message}`);
         throw error;
