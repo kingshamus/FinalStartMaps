@@ -16,6 +16,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.css" />
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      position: fixed; /* Change to fixed positioning */
+      top: 50%; /* Position at 50% from the top */
+      left: 50%; /* Position at 50% from the left */
+      transform: translate(-50%, -50%); /* Center the spinner */
+      z-index: 9999; /* Ensure spinner appears on top of other elements */
+      display: none; /* Hide spinner by default */
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+</style>
 </head>
 <body>
     <div id="search-container">
