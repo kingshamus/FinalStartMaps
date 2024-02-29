@@ -3,6 +3,77 @@ var nominatimEndpoint = 'https://nominatim.openstreetmap.org/search';
 // Replace `<YOUR_SMASHGG_API_ENDPOINT>` with the Smash.gg API endpoint
 var smashGGEndpoint = 'cache.json';
 
+// Function to request location permission and zoom if allowed
+function requestLocationAndZoom() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            // Get user's current location
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+
+            // Initialize the map with the user's location
+            map.setView([latitude, longitude], 3); // Set initial zoom level to 10
+
+            // Get the current zoom level
+            var currentZoom = map.getZoom();
+
+            // Target zoom level
+            var targetZoom = 10; // Adjust the target zoom level here
+
+            // Calculate the difference between current and target zoom levels
+            var zoomDiff = targetZoom - currentZoom;
+
+            // Duration for the animation (in milliseconds)
+            var duration = 3000; // Adjust the duration here (in milliseconds)
+
+            // Interval time for each step in the animation
+            var interval = 20; // Adjust the interval here (in milliseconds)
+
+            // Number of steps in the animation
+            var steps = duration / interval;
+
+            // Calculate the zoom increment per step
+            var zoomIncrement = zoomDiff / steps;
+
+            // Initialize the counter for the steps
+            var stepCount = 0;
+
+            // Define the function to zoom gradually
+            function gradualZoom() {
+                // Increment the step count
+                stepCount++;
+
+                // Calculate the new zoom level for this step
+                var newZoom = currentZoom + zoomIncrement * stepCount;
+
+                // Set the new zoom level
+                map.setZoom(newZoom);
+
+                // Check if reached the final step
+                if (stepCount >= steps) {
+                    // Clear the interval
+                    clearInterval(zoomInterval);
+                }
+            }
+
+            // Call the gradualZoom function in intervals
+            var zoomInterval = setInterval(gradualZoom, interval);
+        }, function (error) {
+            // Handle errors when getting user's location
+            console.error('Error getting user location:', error);
+        });
+    } else {
+        // If geolocation is not supported by the browser
+        console.error('Geolocation is not supported by this browser.');
+    }
+}
+
+
+// Call requestLocationAndZoom when the page is loaded
+document.addEventListener("DOMContentLoaded", function () {
+    requestLocationAndZoom();
+});
+
 // Initialize the map
 var map = L.map('map').setView([0, 0], 2);
 
