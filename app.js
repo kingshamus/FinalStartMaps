@@ -151,6 +151,7 @@ async function fetchData(videogameId) {
 async function displayData(gameId) {
     try {
         const data = await fetchData(gameId);
+        const groupedTournaments = {};
 
         data.forEach(tournament => {
             const { name, lat, lng, startAt, url } = tournament;
@@ -160,11 +161,34 @@ async function displayData(gameId) {
             const lngNum = parseFloat(lng);
 
             if (!isNaN(latNum) && !isNaN(lngNum) && lat !== null && lng !== null) {
-                // Add marker for each entry using lat and lng directly
-                L.marker([latNum, lngNum]).addTo(map)
-                    .bindPopup(`<b>${name}</b><br><b>Starts at:</b> ${new Date(startAt * 1000).toLocaleString()}<br><b>Sign Up Link:</b> <a href="https://start.gg${url}" target="_blank">https://start.gg${url}</a>`);
+                // Group tournaments with the same coordinates
+                const key = `${latNum},${lngNum}`;
+                if (!groupedTournaments[key]) {
+                    groupedTournaments[key] = [];
+                }
+                groupedTournaments[key].push(tournament);
             } else {
                 console.error(`Invalid lat/lng values or null for tournament: ${name}`);
+            }
+        });
+
+        // Display markers for each group of tournaments
+        Object.values(groupedTournaments).forEach(tournaments => {
+            const { lat, lng } = tournaments[0];
+            const marker = L.marker([lat, lng]).addTo(map);
+
+            // If there are multiple tournaments at the same location, create a popup showing all of them
+            if (tournaments.length > 1) {
+                let popupContent = '<ul>';
+                tournaments.forEach(tournament => {
+                    popupContent += `<li><b>${tournament.name}</b> - Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()} - <a href="https://start.gg${tournament.url}" target="_blank">Sign Up Link</a></li>`;
+                });
+                popupContent += '</ul>';
+                marker.bindPopup(popupContent);
+            } else {
+                // If there's only one tournament at the location, create a normal popup
+                const { name, startAt, url } = tournaments[0];
+                marker.bindPopup(`<b>${name}</b><br><b>Starts at:</b> ${new Date(startAt * 1000).toLocaleString()}<br><b>Sign Up Link:</b> <a href="https://start.gg${url}" target="_blank">https://start.gg${url}</a>`);
             }
         });
     } catch (error) {
