@@ -115,6 +115,7 @@ async function fetchData(videogameId) {
                             lat
                             lng
                             isRegistrationOpen
+                            numAttendees
                             startAt
                           }
                         }
@@ -157,7 +158,7 @@ async function displayData(gameId) {
         const currentTime = new Date().getTime();
 
         data.forEach(tournament => {
-            const { name, lat, lng, startAt, url } = tournament;
+            const { name, lat, lng, startAt, url, numAttendees } = tournament;
 
             // Check if lat and lng are valid numbers and not null
             const latNum = parseFloat(lat);
@@ -196,14 +197,14 @@ async function displayData(gameId) {
             if (tournaments.length > 1) {
                 let popupContent = '<ul>';
                 tournaments.forEach(tournament => {
-                    popupContent += `<li><b>${tournament.name}</b> - Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()} - <a href="https://start.gg${tournament.url}" target="_blank">Sign Up Link</a></li>`;
+                    popupContent += `<li><b>${tournament.name}</b><br>Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()}<br><a href="https://start.gg${tournament.url}" target="_blank">Sign Up Link</a><br>Attendees: ${tournament.numAttendees}</li>`;
                 });
                 popupContent += '</ul>';
                 marker.bindPopup(popupContent);
             } else {
                 // If there's only one tournament at the location, create a normal popup
-                const { name, startAt, url } = tournaments[0];
-                marker.bindPopup(`<b>${name}</b><br><b>Starts at:</b> ${new Date(startAt * 1000).toLocaleString()}<br><b>Sign Up Link:</b> <a href="https://start.gg${url}" target="_blank">https://start.gg${url}</a>`);
+                const { name, startAt, url, numAttendees } = tournaments[0];
+                marker.bindPopup(`<b>${name}</b><br>Starts at: ${new Date(startAt * 1000).toLocaleString()}UTC<br><a href="https://start.gg${url}" target="_blank">Sign Up Link</a><br>Attendees: ${numAttendees}`);
             }
 
             // Set marker icon color based on whether the tournament is within the next 7 days
@@ -220,6 +221,7 @@ async function displayData(gameId) {
         console.error(`Error displaying data: ${error.message}`);
     }
 }
+
 
 // Fetch video games data for search bar autocomplete
 async function fetchVideoGames() {
