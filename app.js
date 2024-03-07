@@ -153,6 +153,9 @@ async function displayData(gameId) {
         const data = await fetchData(gameId);
         const groupedTournaments = {};
 
+        // Get current timestamp
+        const currentTime = new Date().getTime();
+
         data.forEach(tournament => {
             const { name, lat, lng, startAt, url } = tournament;
 
@@ -161,12 +164,24 @@ async function displayData(gameId) {
             const lngNum = parseFloat(lng);
 
             if (!isNaN(latNum) && !isNaN(lngNum) && lat !== null && lng !== null) {
+                // Calculate time difference in milliseconds
+                const timeDifference = startAt * 1000 - currentTime;
+
+                // Determine if the tournament is within the next 7 days
+                const withinNext7Days = timeDifference <= 7 * 24 * 60 * 60 * 1000;
+
                 // Group tournaments with the same coordinates
                 const key = `${latNum},${lngNum}`;
                 if (!groupedTournaments[key]) {
                     groupedTournaments[key] = [];
                 }
-                groupedTournaments[key].push(tournament);
+
+                // Push tournament to appropriate group based on time
+                if (withinNext7Days) {
+                    groupedTournaments[key].unshift(tournament); // Add to beginning to display on top of other pins
+                } else {
+                    groupedTournaments[key].push(tournament);
+                }
             } else {
                 console.error(`Invalid lat/lng values or null for tournament: ${name}`);
             }
@@ -190,6 +205,16 @@ async function displayData(gameId) {
                 const { name, startAt, url } = tournaments[0];
                 marker.bindPopup(`<b>${name}</b><br><b>Starts at:</b> ${new Date(startAt * 1000).toLocaleString()}<br><b>Sign Up Link:</b> <a href="https://start.gg${url}" target="_blank">https://start.gg${url}</a>`);
             }
+
+            // Set marker icon color based on whether the tournament is within the next 7 days
+            const iconColor = tournaments[0].startAt * 1000 - currentTime <= 7 * 24 * 60 * 60 * 1000 ? 'red' : 'blue';
+            marker.setIcon(L.icon({
+                iconUrl: `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }));
         });
     } catch (error) {
         console.error(`Error displaying data: ${error.message}`);
