@@ -43,7 +43,7 @@ body {
 #map-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 40px); /* Adjust height to accommodate search bar */
+    height: calc(100vh); /* Adjust height to accommodate search bar */
 }
 
 #map {
