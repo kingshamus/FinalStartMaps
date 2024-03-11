@@ -252,7 +252,7 @@ async function displayData(gameId) {
         });
 
 // Create a custom control for legend
-const legendControl = L.control({ position: 'bottomleft' });
+const legendControl = L.control({ position: 'topright' });
 
 // Implement the onAdd method for the control
 legendControl.onAdd = function(map) {
@@ -286,14 +286,6 @@ legendControl.onAdd = function(map) {
             legendContent.style.display = 'none';
         }
     });
-
-    // Check if the device is a mobile browser and adjust legend position
-    const isMobileBrowser = /Mobi/.test(navigator.userAgent) && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobileBrowser) {
-        container.style.position = 'absolute';
-        container.style.top = '10px';
-        container.style.right = '10px';
-    }
 
     return container;
 };
