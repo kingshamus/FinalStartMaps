@@ -287,10 +287,13 @@ legendControl.onAdd = function(map) {
         }
     });
 
-        // Check if the device is mobile and adjust legend position
-        if (/Mobi/.test(navigator.userAgent)) {
-            container.style.bottom = '30px'; // Adjust position for mobile
-        }
+    // Check if the device is a mobile browser and adjust legend position
+    const isMobileBrowser = /Mobi/.test(navigator.userAgent) && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobileBrowser) {
+        container.style.position = 'absolute';
+        container.style.top = '10px';
+        container.style.right = '10px';
+    }
 
     return container;
 };
