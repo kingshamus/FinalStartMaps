@@ -174,24 +174,58 @@ async function displayData(gameId) {
                 // Group tournaments with the same coordinates
                 const key = `${latNum},${lngNum}`;
                 if (!groupedTournaments[key]) {
-                    groupedTournaments[key] = [];
+                    groupedTournaments[key] = {
+                        tournaments: [],
+                        withinNext7Days
+                    };
                 }
 
                 // Push tournament to appropriate group based on time
-                if (withinNext7Days) {
-                    groupedTournaments[key].unshift(tournament); // Add to beginning to display on top of other pins
-                } else {
-                    groupedTournaments[key].push(tournament);
-                }
+                groupedTournaments[key].tournaments.push({
+                    name,
+                    lat: latNum,
+                    lng: lngNum,
+                    startAt,
+                    url,
+                    numAttendees
+                });
             } else {
                 console.error(`Invalid lat/lng values or null for tournament: ${name}`);
             }
         });
 
         // Display markers for each group of tournaments
-        Object.values(groupedTournaments).forEach(tournaments => {
-            const { lat, lng } = tournaments[0];
-            const marker = L.marker([lat, lng]).addTo(map);
+        Object.values(groupedTournaments).forEach(group => {
+            const { tournaments, withinNext7Days } = group;
+
+            // Calculate the average coordinates for grouping
+            let totalLat = 0;
+            let totalLng = 0;
+            tournaments.forEach(tournament => {
+                totalLat += tournament.lat;
+                totalLng += tournament.lng;
+            });
+            const avgLat = totalLat / tournaments.length;
+            const avgLng = totalLng / tournaments.length;
+
+            // Determine the icon color based on the number of attendees and whether the tournament is within the next 7 days
+            let iconColor;
+            if (withinNext7Days) {
+                const numAttendeesGroup = tournaments.reduce((acc, curr) => acc + curr.numAttendees, 0);
+                if (numAttendeesGroup < 16) {
+                    iconColor = 'green';
+                } else if (numAttendeesGroup >= 16 && numAttendeesGroup < 32) {
+                    iconColor = 'yellow';
+                } else if (numAttendeesGroup >= 32 && numAttendeesGroup < 64) {
+                    iconColor = 'red';
+                } else {
+                    iconColor = 'black';
+                }
+            } else {
+                iconColor = 'blue'; // Default color for events outside 7 days
+            }
+
+            const marker = L.marker([avgLat, avgLng]).addTo(map);
 
             // If there are multiple tournaments at the same location, create a popup showing all of them
             if (tournaments.length > 1) {
@@ -207,8 +241,7 @@ async function displayData(gameId) {
                 marker.bindPopup(`<b>${name}</b><br>Starts at: ${new Date(startAt * 1000).toLocaleString()}UTC<br><a href="https://start.gg${url}" target="_blank">Sign Up Link</a><br>Attendees: ${numAttendees}`);
             }
 
-            // Set marker icon color based on whether the tournament is within the next 7 days
-            const iconColor = tournaments[0].startAt * 1000 - currentTime <= 7 * 24 * 60 * 60 * 1000 ? 'red' : 'blue';
+            // Set marker icon color
             marker.setIcon(L.icon({
                 iconUrl: `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
                 iconSize: [25, 41],
@@ -217,10 +250,55 @@ async function displayData(gameId) {
                 shadowSize: [41, 41]
             }));
         });
+
+// Create a custom control for legend
+const legendControl = L.control({ position: 'topright' });
+
+// Implement the onAdd method for the control
+legendControl.onAdd = function(map) {
+    // Create a container div for the legend
+    const container = L.DomUtil.create('div', 'legend-container');
+
+    // Add HTML content for the legend
+    container.innerHTML = `
+        <div class="legend">
+            <button class="toggle-legend">Legend</button>
+            <div class="legend-content" style="display: none; background-color: white; padding: 10px;">
+                <h4>Legend</h4>
+                <ul>
+                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png"> Less than 16 attendees</li>
+                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png"> 16-31 attendees</li>
+                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png"> 32-63 attendees</li>
+                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-black.png"> 64 or more attendees</li>
+                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png"> Events starting beyond the next 7 days</li>
+                </ul>
+            </div>
+        </div>
+    `;
+
+    // Toggle legend visibility when button is clicked
+    const toggleButton = container.querySelector('.toggle-legend');
+    const legendContent = container.querySelector('.legend-content');
+    toggleButton.addEventListener('click', function() {
+        if (legendContent.style.display === 'none') {
+            legendContent.style.display = 'block';
+        } else {
+            legendContent.style.display = 'none';
+        }
+    });
+
+    return container;
+};
+
+// Add the legend control to the map
+legendControl.addTo(map);
+
+
     } catch (error) {
         console.error(`Error displaying data: ${error.message}`);
     }
 }
+
 
 
 // Fetch video games data for search bar autocomplete
