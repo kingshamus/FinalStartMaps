@@ -287,6 +287,11 @@ legendControl.onAdd = function(map) {
         }
     });
 
+        // Check if the device is mobile and adjust legend position
+        if (/Mobi/.test(navigator.userAgent)) {
+            container.style.bottom = '30px'; // Adjust position for mobile
+        }
+
     return container;
 };
 
