@@ -208,22 +208,34 @@ async function displayData(gameId) {
             const avgLat = totalLat / tournaments.length;
             const avgLng = totalLng / tournaments.length;
 
-            // Determine the icon color based on the number of attendees and whether the tournament is within the next 7 days
+            // Determine the icon color based on the tournament category
             let iconColor;
-            if (withinNext7Days) {
-                const numAttendeesGroup = tournaments.reduce((acc, curr) => acc + curr.numAttendees, 0);
-                if (numAttendeesGroup < 16) {
-                    iconColor = 'green';
-                } else if (numAttendeesGroup >= 16 && numAttendeesGroup < 32) {
-                    iconColor = 'yellow';
-                } else if (numAttendeesGroup >= 32 && numAttendeesGroup < 64) {
-                    iconColor = 'red';
+            const numAttendeesGroup = tournaments.reduce((acc, curr) => acc + curr.numAttendees, 0);
+            if (tournaments.some(tournament => ["evo japan 2024", "evo 2024"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
+                iconColor = 'gold'; // Master + Gold
+            } else if (tournaments.some(tournament => ["paradise game battle 2024", "combo breaker 2024", "battle arena melbourne 2024", "tgu 2024", "punishment 2", "the mixup 2024", "ceo 2024", "atl super tournament 2024", "vsfighting xii", "emirates showdown 2024"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
+                iconColor = 'gold'; // Master
+            } else if (tournaments.some(tournament => ["electric clash 2024", "only the best 2024", "ufa 2024", "3f - fight for the future", "second wind 2024", "thunderstruck 2024", "brussels challenge 2024", "fv major 2024", "clash of the olympians 2024", "dreamhack dallas 2024", "crossover 2024", "cape town showdown 2024", "hado fight festival", "moor1ng"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
+                iconColor = 'grey'; // Challenger
+            } else  if (withinNext7Days) {
+                    if (numAttendeesGroup >= 96) {
+                        iconColor = 'black'; // 96 attendees Black
+                    } else if (numAttendeesGroup >= 64) {
+                        iconColor = 'violet'; // 64 attendees Violet
+                    } else if (numAttendeesGroup >= 48) {
+                        iconColor = 'red'; // 48 attendees Red
+                    } else if (numAttendeesGroup >= 32) {
+                        iconColor = 'orange'; // 32 attendees Orange
+                    } else if (numAttendeesGroup >= 24) {
+                        iconColor = 'yellow'; // 24 attendees Yellow
+                    } else if (numAttendeesGroup >= 16) {
+                        iconColor = 'green'; // 16 attendees Green
+                    } else {
+                        iconColor = 'white'; // Under attendees 16 White
+                    }
                 } else {
-                    iconColor = 'black';
+                    iconColor = 'blue'; // Over 1 week away Blue
                 }
-            } else {
-                iconColor = 'blue'; // Default color for events outside 7 days
-            }
 
             const marker = L.marker([avgLat, avgLng]).addTo(map);
 
@@ -243,7 +255,7 @@ async function displayData(gameId) {
 
             // Set marker icon color
             marker.setIcon(L.icon({
-                iconUrl: `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+                iconUrl: `custom pin/marker-icon-${iconColor}.png`,
                 iconSize: [25, 41],
                 iconAnchor: [12, 41],
                 popupAnchor: [1, -34],
@@ -251,55 +263,57 @@ async function displayData(gameId) {
             }));
         });
 
-// Create a custom control for legend
-const legendControl = L.control({ position: 'topright' });
+        // Create a custom control for legend
+        const legendControl = L.control({ position: 'topright' });
 
-// Implement the onAdd method for the control
-legendControl.onAdd = function(map) {
-    // Create a container div for the legend
-    const container = L.DomUtil.create('div', 'legend-container');
+        // Implement the onAdd method for the control
+        legendControl.onAdd = function(map) {
+            // Create a container div for the legend
+            const container = L.DomUtil.create('div', 'legend-container');
 
-    // Add HTML content for the legend
-    container.innerHTML = `
-        <div class="legend">
-            <button class="toggle-legend">Legend</button>
-            <div class="legend-content" style="display: none; background-color: white; padding: 10px;">
-                <h4>Legend</h4>
-                <ul>
-                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png"> Less than 16 attendees</li>
-                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png"> 16-31 attendees</li>
-                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png"> 32-63 attendees</li>
-                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-black.png"> 64 or more attendees</li>
-                    <li><img class="legend-icon" src="https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png"> Events starting beyond the next 7 days</li>
-                </ul>
-            </div>
-        </div>
-    `;
+            // Add HTML content for the legend
+            container.innerHTML = `
+                <div class="legend">
+                    <button class="toggle-legend">Legend</button>
+                    <div class="legend-content" style="display: none; background-color: white; padding: 10px;">
+                        <h4>Legend</h4>
+                        <ul>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-gold.png"> Master +, Master</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-grey.png"> Challenger</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-black.png"> 96+ attendees</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-violet.png"> 64+ attendees</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-red.png"> 48+ attendees</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-orange.png"> 32+ attendees</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-yellow.png"> 24+ attendees</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-green.png"> 16+ attendees</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-white.png"> Under attendees 16</li>
+                            <li><img class="legend-icon" src="custom pin/marker-icon-blue.png"> Over 1 week away</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
 
-    // Toggle legend visibility when button is clicked
-    const toggleButton = container.querySelector('.toggle-legend');
-    const legendContent = container.querySelector('.legend-content');
-    toggleButton.addEventListener('click', function() {
-        if (legendContent.style.display === 'none') {
-            legendContent.style.display = 'block';
-        } else {
-            legendContent.style.display = 'none';
-        }
-    });
+            // Toggle legend visibility when button is clicked
+            const toggleButton = container.querySelector('.toggle-legend');
+            const legendContent = container.querySelector('.legend-content');
+            toggleButton.addEventListener('click', function() {
+                if (legendContent.style.display === 'none') {
+                    legendContent.style.display = 'block';
+                } else {
+                    legendContent.style.display = 'none';
+                }
+            });
 
-    return container;
-};
+            return container;
+        };
 
-// Add the legend control to the map
-legendControl.addTo(map);
-
+        // Add the legend control to the map
+        legendControl.addTo(map);
 
     } catch (error) {
         console.error(`Error displaying data: ${error.message}`);
     }
 }
-
-
 
 // Fetch video games data for search bar autocomplete
 async function fetchVideoGames() {
