@@ -148,6 +148,8 @@ async function fetchData(videogameId) {
     }
 }
 
+const allMarkers = [];
+
 // Function to display data on the map
 async function displayData(gameId) {
     try {
@@ -238,6 +240,7 @@ async function displayData(gameId) {
                 }
 
             const marker = L.marker([avgLat, avgLng]).addTo(map);
+            allMarkers.push(marker);
 
             // If there are multiple tournaments at the same location, create a popup showing all of them
             if (tournaments.length > 1) {
@@ -263,52 +266,134 @@ async function displayData(gameId) {
             }));
         });
 
-        // Create a custom control for legend
-        const legendControl = L.control({ position: 'topright' });
+// Create a custom control for legend
+const legendControl = L.control({ position: 'topright' });
 
-        // Implement the onAdd method for the control
-        legendControl.onAdd = function(map) {
-            // Create a container div for the legend
-            const container = L.DomUtil.create('div', 'legend-container');
+// Implement the onAdd method for the control
+legendControl.onAdd = function(map) {
+    // Create a container div for the legend
+    const container = L.DomUtil.create('div', 'legend-container');
 
-            // Add HTML content for the legend
-            container.innerHTML = `
-                <div class="legend">
-                    <button class="toggle-legend">Legend</button>
-                    <div class="legend-content" style="display: none; background-color: white; padding: 10px;">
-                        <h4>Legend</h4>
-                        <ul>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-gold.png"> Master +, Master</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-grey.png"> Challenger</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-black.png"> 96+ attendees</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-violet.png"> 64+ attendees</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-red.png"> 48+ attendees</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-orange.png"> 32+ attendees</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-yellow.png"> 24+ attendees</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-green.png"> 16+ attendees</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-white.png"> Under attendees 16</li>
-                            <li><img class="legend-icon" src="custom pin/marker-icon-blue.png"> Over 1 week away</li>
-                        </ul>
-                    </div>
+    // Add HTML content for the legend
+    container.innerHTML = `
+        <div class="legend">
+            <button class="toggle-legend">Filter</button>
+            <div class="legend-content" style="display: none; background-color: white; padding: 10px;">
+                <h4>Filter</h4>
+                <div class="legend-buttons">
+                    <button class="select-all">Select All</button>
+                    <button class="deselect-all">Deselect All</button>
                 </div>
-            `;
+                <ul>
+                    <li>
+                        <input type="checkbox" id="checkbox-gold" class="pin-checkbox" checked>
+                        <label for="checkbox-gold"><img class="legend-icon" src="custom pin/marker-icon-gold.png"> Master +, Master</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-grey" class="pin-checkbox" checked>
+                        <label for="checkbox-grey"><img class="legend-icon" src="custom pin/marker-icon-grey.png"> Challenger</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-black" class="pin-checkbox" checked>
+                        <label for="checkbox-black"><img class="legend-icon" src="custom pin/marker-icon-black.png"> 96+ attendees</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-violet" class="pin-checkbox" checked>
+                        <label for="checkbox-violet"><img class="legend-icon" src="custom pin/marker-icon-violet.png"> 64+ attendees</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-red" class="pin-checkbox" checked>
+                        <label for="checkbox-red"><img class="legend-icon" src="custom pin/marker-icon-red.png"> 48+ attendees</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-orange" class="pin-checkbox" checked>
+                        <label for="checkbox-orange"><img class="legend-icon" src="custom pin/marker-icon-orange.png"> 32+ attendees</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-yellow" class="pin-checkbox" checked>
+                        <label for="checkbox-yellow"><img class="legend-icon" src="custom pin/marker-icon-yellow.png"> 24+ attendees</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-green" class="pin-checkbox" checked>
+                        <label for="checkbox-green"><img class="legend-icon" src="custom pin/marker-icon-green.png"> 16+ attendees</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-white" class="pin-checkbox" checked>
+                        <label for="checkbox-white"><img class="legend-icon" src="custom pin/marker-icon-white.png"> Under attendees 16</label>
+                    </li>
+                    <li>
+                        <input type="checkbox" id="checkbox-blue" class="pin-checkbox" checked>
+                        <label for="checkbox-blue"><img class="legend-icon" src="custom pin/marker-icon-blue.png"> Over 1 week away</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    `;
 
-            // Toggle legend visibility when button is clicked
-            const toggleButton = container.querySelector('.toggle-legend');
-            const legendContent = container.querySelector('.legend-content');
-            toggleButton.addEventListener('click', function() {
-                if (legendContent.style.display === 'none') {
-                    legendContent.style.display = 'block';
-                } else {
-                    legendContent.style.display = 'none';
-                }
-            });
+    // Toggle legend visibility when button is clicked
+    const toggleButton = container.querySelector('.toggle-legend');
+    const legendContent = container.querySelector('.legend-content');
+    toggleButton.addEventListener('click', function() {
+        if (legendContent.style.display === 'none') {
+            legendContent.style.display = 'block';
+        } else {
+            legendContent.style.display = 'none';
+        }
+    });
 
-            return container;
-        };
+    // Select All button functionality
+    const selectAllButton = container.querySelector('.select-all');
+    selectAllButton.addEventListener('click', function() {
+        const checkboxes = container.querySelectorAll('.pin-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+            const iconColor = checkbox.id.replace('checkbox-', '');
+            filterMarkers(iconColor, true);
+        });
+    });
 
-        // Add the legend control to the map
-        legendControl.addTo(map);
+    // Deselect All button functionality
+    const deselectAllButton = container.querySelector('.deselect-all');
+    deselectAllButton.addEventListener('click', function() {
+        const checkboxes = container.querySelectorAll('.pin-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            const iconColor = checkbox.id.replace('checkbox-', '');
+            filterMarkers(iconColor, false);
+        });
+    });
+
+    // Add event listeners to the checkboxes
+    const checkboxes = container.querySelectorAll('.pin-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const iconColor = this.id.replace('checkbox-', '');
+            const checked = this.checked;
+            filterMarkers(iconColor, checked);
+        });
+    });
+
+    return container;
+};
+
+// Function to filter markers based on pin type
+function filterMarkers(pinType, show) {
+    allMarkers.forEach(marker => {
+        const icon = marker.options.icon;
+        if (icon.options.iconUrl.includes(pinType)) {
+            if (show && !map.hasLayer(marker)) {
+                // Add the marker to the map if it matches the pinType and is not already visible
+                map.addLayer(marker);
+            } else if (!show && map.hasLayer(marker)) {
+                // Remove the marker from the map if it matches the pinType and is visible
+                map.removeLayer(marker);
+            }
+        }
+    });
+}
+
+// Add the legend control to the map
+legendControl.addTo(map);
 
     } catch (error) {
         console.error(`Error displaying data: ${error.message}`);
@@ -363,6 +448,9 @@ async function search() {
         const videoGames = await fetchVideoGames();
         const selectedGame = videoGames.find(game => game.name === selectedGameName);
         if (selectedGame) {
+            // Hide legend when starting a new search
+            hideLegend();
+            
             // Show loading spinner
             document.getElementById('map-loading-spinner').style.display = 'block';
             map.eachLayer(layer => {
@@ -374,7 +462,59 @@ async function search() {
             // Hide loading spinner after data is displayed
             document.getElementById('map-loading-spinner').style.display = 'none';
         }
+    } else {
+        // Clear search input and show legend when input is empty
+        input.value = '';
+        showLegend();
     }
+}
+
+// Function to hide the legend
+function hideLegend() {
+    const legendContainer = document.querySelector('.legend-container');
+    if (legendContainer) {
+        legendContainer.style.display = 'none';
+    }
+}
+
+// Function to show the legend
+function showLegend() {
+    const legendContainer = document.querySelector('.legend-container');
+    if (legendContainer) {
+        legendContainer.style.display = 'block';
+    }
+}
+
+// Function to select or deselect all checkboxes
+function toggleAllCheckboxes(checked) {
+    const checkboxes = document.querySelectorAll('.pin-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checked;
+        const iconColor = checkbox.id.replace('checkbox-', '');
+        filterMarkers(iconColor, checked);
+    });
+}
+
+// Add "Select All" and "Deselect All" buttons to the legend
+const selectAllButton = document.createElement('button');
+selectAllButton.textContent = 'Select All';
+selectAllButton.classList.add('legend-button');
+selectAllButton.addEventListener('click', function() {
+    toggleAllCheckboxes(true);
+});
+
+const deselectAllButton = document.createElement('button');
+deselectAllButton.textContent = 'Deselect All';
+deselectAllButton.classList.add('legend-button');
+deselectAllButton.addEventListener('click', function() {
+    toggleAllCheckboxes(false);
+});
+
+// Add buttons to legend container
+const legendContainer = document.querySelector('.legend-container');
+if (legendContainer) {
+    legendContainer.appendChild(selectAllButton);
+    legendContainer.appendChild(deselectAllButton);
 }
 
 // Call the function to set up autocomplete
