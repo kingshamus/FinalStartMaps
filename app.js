@@ -170,15 +170,15 @@ async function displayData(gameId) {
                 // Calculate time difference in milliseconds
                 const timeDifference = startAt * 1000 - currentTime;
 
-                // Determine if the tournament is within the next 7 days
-                const withinNext7Days = timeDifference <= 7 * 24 * 60 * 60 * 1000;
+                // Determine if the tournament is within the next 14 days
+                const withinNext14Days = timeDifference <= 14 * 24 * 60 * 60 * 1000;
 
                 // Group tournaments with the same coordinates
                 const key = `${latNum},${lngNum}`;
                 if (!groupedTournaments[key]) {
                     groupedTournaments[key] = {
                         tournaments: [],
-                        withinNext7Days
+                        withinNext14Days
                     };
                 }
 
@@ -198,7 +198,7 @@ async function displayData(gameId) {
 
         // Display markers for each group of tournaments
         Object.values(groupedTournaments).forEach(group => {
-            const { tournaments, withinNext7Days } = group;
+            const { tournaments, withinNext14Days } = group;
 
             // Calculate the average coordinates for grouping
             let totalLat = 0;
@@ -219,7 +219,7 @@ async function displayData(gameId) {
                 iconColor = 'gold'; // Master
             } else if (tournaments.some(tournament => ["electric clash 2024", "only the best 2024", "ufa 2024", "3f - fight for the future", "second wind 2024", "thunderstruck 2024", "brussels challenge 2024", "fv major 2024", "clash of the olympians 2024", "dreamhack dallas 2024", "crossover 2024", "cape town showdown 2024", "hado fight festival", "moor1ng"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
                 iconColor = 'grey'; // Challenger
-            } else  if (withinNext7Days) {
+            } else  if (withinNext14days) {
                     if (numAttendeesGroup >= 96) {
                         iconColor = 'black'; // 96 attendees Black
                     } else if (numAttendeesGroup >= 64) {
@@ -236,7 +236,7 @@ async function displayData(gameId) {
                         iconColor = 'white'; // Under attendees 16 White
                     }
                 } else {
-                    iconColor = 'blue'; // Over 1 week away Blue
+                    iconColor = 'blue'; // Over 2 weeks away Blue
                 }
 
             const marker = L.marker([avgLat, avgLng]).addTo(map);
