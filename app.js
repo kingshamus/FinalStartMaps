@@ -323,7 +323,7 @@ legendControl.onAdd = function(map) {
                     </li>
                     <li>
                         <input type="checkbox" id="checkbox-blue" class="pin-checkbox" checked>
-                        <label for="checkbox-blue"><img class="legend-icon" src="custom pin/marker-icon-blue.png"> Over 1 week away</label>
+                        <label for="checkbox-blue"><img class="legend-icon" src="custom pin/marker-icon-blue.png"> Over 2 weeks away</label>
                     </li>
                 </ul>
             </div>
