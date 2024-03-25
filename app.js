@@ -196,17 +196,17 @@ async function displayData(gameId) {
             }
         });
 
-                        // If no tournaments found, show a pop-up for 10 seconds
-                if (Object.keys(groupedTournaments).length === 0) {
-                    const popup = L.popup()
-                        .setLatLng(map.getCenter())
-                        .setContent("No Tournaments Found")
-                        .openOn(map);
+        // If no tournaments found, show a pop-up for 10 seconds
+        if (Object.keys(groupedTournaments).length === 0) {
+            const popup = L.popup()
+                .setLatLng(map.getCenter())
+                .setContent("No Tournaments Found")
+                .openOn(map);
         
-                    setTimeout(function () {
-                        map.closePopup(popup);
-                    }, 10000); // Close popup after 10 seconds
-                }
+            setTimeout(function () {
+                map.closePopup(popup);
+            }, 10000); // Close popup after 10 seconds
+        }
 
 
         // Display markers for each group of tournaments
