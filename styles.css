@@ -1,6 +1,8 @@
-body {
+html, body {
     margin: 0;
     padding: 0;
+    height: 100%;
+    overflow: hidden; /* Prevent scrollbars */
     font-family: Arial, sans-serif;
 }
 
@@ -20,6 +22,8 @@ body {
     border-radius: 5px;
     padding: 5px 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: auto; /* Adjust width to fit content */
+    max-width: 600px; /* Maximum width for larger screens */
 }
 
 #game-search {
@@ -40,10 +44,30 @@ body {
     margin-left: 10px;
 }
 
+#clear-button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ff4d4d;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#clear-button:hover {
+    background-color: #ff1a1a;
+}
+
 #map-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: calc(100vh); /* Adjust height to accommodate search bar */
+    height: 100vh; /* Full viewport height */
+    margin: 0;
+    padding: 0;
+    z-index: 1; /* Ensure it's below the search container */
 }
 
 #map {
@@ -68,4 +92,32 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Custom styles for autocomplete items */
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid #d4d4d4;
+    border-bottom: none;
+    border-top: none;
+    z-index: 99;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+}
+
+.autocomplete-item {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #fff;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.autocomplete-item:hover {
+    background-color: #e9e9e9;
+}
+
+.autocomplete-item input[type="checkbox"] {
+    margin-right: 10px;
 }

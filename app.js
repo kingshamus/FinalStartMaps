@@ -156,6 +156,11 @@ async function displayData(gameId) {
         const data = await fetchData(gameId);
         const groupedTournaments = {};
 
+                // Assume you already have a list of video games with their names and IDs
+                const videoGames = await fetchVideoGames();
+                const selectedGame = videoGames.find(game => game.id === gameId);
+                const gameName = selectedGame ? selectedGame.name : 'Unknown Game';
+
         // Get current timestamp
         const currentTime = new Date().getTime();
 
@@ -255,19 +260,23 @@ async function displayData(gameId) {
             const marker = L.marker([avgLat, avgLng]).addTo(map);
             allMarkers.push(marker);
 
-            // If there are multiple tournaments at the same location, create a popup showing all of them
-            if (tournaments.length > 1) {
-                let popupContent = '<ul>';
-                tournaments.forEach(tournament => {
-                    popupContent += `<li><b>${tournament.name}</b><br>Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()}<br><a href="https://start.gg${tournament.url}" target="_blank">Sign Up Link</a><br>Attendees: ${tournament.numAttendees}</li>`;
-                });
-                popupContent += '</ul>';
-                marker.bindPopup(popupContent);
-            } else {
-                // If there's only one tournament at the location, create a normal popup
-                const { name, startAt, url, numAttendees } = tournaments[0];
-                marker.bindPopup(`<b>${name}</b><br>Starts at: ${new Date(startAt * 1000).toLocaleString()}UTC<br><a href="https://start.gg${url}" target="_blank">Sign Up Link</a><br>Attendees: ${numAttendees}`);
-            }
+// Assuming 'gameName' is included in the tournament data from autofill
+// If there are multiple tournaments at the same location, create a popup showing all of them
+if (tournaments.length > 1) {
+    let popupContent = '<ul>';
+    tournaments.forEach(tournament => {
+        // Access the game name from the tournament or autofill data
+        const gameName = tournament.gameName || 'Unknown Game'; // Adjust based on how gameName is stored
+        popupContent += `<li><b>${tournament.name}</b><br>Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()}<br><a href="https://start.gg${tournament.url}" target="_blank">Sign Up Link</a><br>Attendees: ${tournament.numAttendees}</li>`;
+    });
+    popupContent += '</ul>';
+    marker.bindPopup(popupContent);
+} else {
+    // If there's only one tournament at the location, create a normal popup
+    const { name, startAt, url, numAttendees, gameName } = tournaments[0];
+    marker.bindPopup(`<b>${name}</b><br>Starts at: ${new Date(startAt * 1000).toLocaleString()}UTC<br><a href="https://start.gg${url}" target="_blank">Sign Up Link</a><br>Attendees: ${numAttendees}`);
+}
+
 
             // Set marker icon color
             marker.setIcon(L.icon({
@@ -405,8 +414,8 @@ function filterMarkers(pinType, show) {
     });
 }
 
-// Add the legend control to the map
-legendControl.addTo(map);
+// Make the control invisible
+document.querySelector('.legend-container').style.display = 'none';
 
     } catch (error) {
         console.error(`Error displaying data: ${error.message}`);
@@ -436,11 +445,11 @@ async function fetchVideoGames() {
     }
 }
 
-// Autocomplete search bar with video games data
 async function autocompleteSearch() {
     try {
         const videoGames = await fetchVideoGames();
         const input = document.getElementById('game-search');
+        const selectedGames = new Set(); // Use a Set to store selected game IDs
 
         // Initialize Awesomplete autocomplete
         new Awesomplete(input, {
@@ -448,38 +457,107 @@ async function autocompleteSearch() {
             autoFirst: true,
             filter: Awesomplete.FILTER_STARTSWITH
         });
+
+        input.addEventListener('awesomplete-selectcomplete', function(event) {
+            const selectedGameName = event.text.value;
+            const game = videoGames.find(g => g.name === selectedGameName);
+            if (game) {
+                selectedGames.add(game.id);
+                updateSelectedGamesDisplay(videoGames, selectedGames);
+            }
+        });
+
     } catch (error) {
-        console.error(`Error setting up autocomplete: ${error.message}`);
+        console.error('Error in autocompleteSearch:', error);
     }
 }
 
-// Function to trigger search
+// Define selectedGames globally or within a module scope
+let selectedGames = new Set(); // or let selectedGames = []; if using an Array
+
+// Function to clear selected games and refresh the page
+function clearSelectedGames() {
+    // Refresh the page to reset all state
+    location.reload();
+}
+
+// Function to update the display of selected games
+function updateSelectedGamesDisplay(videoGames, selectedGames) {
+    const display = document.getElementById('selected-games-display');
+
+    // Get the count of selected games
+    const selectedGamesCount = selectedGames instanceof Set ? selectedGames.size : selectedGames.length;
+
+    // Update the display to show "X Games Selected"
+    display.textContent = `${selectedGamesCount} ${selectedGamesCount === 1 ? 'Game' : 'Games'} Selected`;
+
+    // Update the hidden input field with the selected game IDs
+    document.getElementById('selected-games').value = Array.from(selectedGames).join(',');
+}
+
+// Example function for adding a game (for context)
+function addGame(gameID) {
+    if (selectedGames instanceof Set) {
+        selectedGames.add(gameID); // Add to the Set
+    } else {
+        console.error('selectedGames is not a Set');
+    }
+
+    // Update display after adding a game
+    updateSelectedGamesDisplay([], selectedGames);
+}
+
+// Function to clear all existing markers and filters from the map
+function clearExistingFiltersAndMarkers() {
+    // Remove all markers from the map
+    map.eachLayer(layer => {
+        if (layer instanceof L.Marker) {
+            map.removeLayer(layer);
+        }
+    });
+
+    // Remove the legend container if it exists
+    const legendContainer = document.querySelector('.legend-container');
+    if (legendContainer) {
+        legendContainer.remove();
+    }
+}
+
 async function search() {
-    const input = document.getElementById('game-search');
-    const selectedGameName = input.value;
-    if (selectedGameName.trim() !== '') {
-        const videoGames = await fetchVideoGames();
-        const selectedGame = videoGames.find(game => game.name === selectedGameName);
-        if (selectedGame) {
-            // Hide legend when starting a new search
-            hideLegend();
-            
-            // Show loading spinner
-            document.getElementById('map-loading-spinner').style.display = 'block';
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
-            });
-            await displayData(selectedGame.id);
-            // Hide loading spinner after data is displayed
-            document.getElementById('map-loading-spinner').style.display = 'none';
+    const selectedGameIds = document.getElementById('selected-games').value.split(',').filter(id => id.trim() !== '');
+    
+    // Hide legend when starting a new search
+    hideLegend();
+    
+    // Show loading spinner
+    document.getElementById('map-loading-spinner').style.display = 'block';
+
+    // Clear existing filters and markers
+    clearExistingFiltersAndMarkers();
+
+    if (selectedGameIds.length > 0) {
+        // Fetch and display data for each selected game
+        for (const gameId of selectedGameIds) {
+            await displayData(gameId);
         }
     } else {
+        // If no game is selected, display a pop-up or a default message
+        const popup = L.popup()
+            .setLatLng(map.getCenter())
+            .setContent("No Games Selected")
+            .openOn(map);
+        
+        setTimeout(function () {
+            map.closePopup(popup);
+        }, 5000); // Close popup after 5 seconds
+
         // Clear search input and show legend when input is empty
-        input.value = '';
+        document.getElementById('game-search').value = '';
         showLegend();
     }
+
+    // Hide loading spinner after data is displayed
+    document.getElementById('map-loading-spinner').style.display = 'none';
 }
 
 // Function to hide the legend
@@ -528,6 +606,60 @@ const legendContainer = document.querySelector('.legend-container');
 if (legendContainer) {
     legendContainer.appendChild(selectAllButton);
     legendContainer.appendChild(deselectAllButton);
+}
+
+// Fetch video games data for search bar autocomplete
+async function fetchVideoGames() {
+    try {
+        const response = await fetch(smashGGEndpoint);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Extract the list of video games from the response
+        const videoGames = data.entities.videogame;
+
+        // Map over the list of video games to extract id and name fields
+        return videoGames.map(game => ({
+            id: game.id,
+            name: game.name
+        }));
+    } catch (error) {
+        console.error(`Error fetching video games data: ${error.message}`);
+        throw error;
+    }
+}
+
+// Function to set up autocomplete search
+async function autocompleteSearch() {
+    try {
+        const videoGames = await fetchVideoGames();
+        const input = document.getElementById('game-search');
+        const selectedGames = new Set(); // Use a Set to store selected game IDs
+
+        // Initialize Awesomplete autocomplete
+        new Awesomplete(input, {
+            list: videoGames.map(game => game.name),
+            autoFirst: true,
+            filter: Awesomplete.FILTER_STARTSWITH
+        });
+
+        input.addEventListener('awesomplete-selectcomplete', function(event) {
+            const selectedGameName = event.text.value;
+            const game = videoGames.find(g => g.name === selectedGameName);
+            if (game) {
+                selectedGames.add(game.id);
+                updateSelectedGamesDisplay(videoGames, selectedGames);
+            }
+        });
+
+        // Initialize display with empty set
+        updateSelectedGamesDisplay(videoGames, selectedGames);
+
+    } catch (error) {
+        console.error(`Error setting up autocomplete: ${error.message}`);
+    }
 }
 
 // Call the function to set up autocomplete

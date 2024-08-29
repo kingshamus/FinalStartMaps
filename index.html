@@ -8,66 +8,205 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <!-- Include leaflet-control-geocoder library -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <!-- Include Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- Include Awesomplete library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.css" />
+    <!-- Include your custom styles -->
     <link rel="stylesheet" href="styles.css">
     <style>
-        .spinner {
-      border: 5px solid #f3f3f3;
-      border-top: 5px solid #3498db;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      position: fixed; /* Change to fixed positioning */
-      top: 50%; /* Position at 50% from the top */
-      left: 50%; /* Position at 50% from the left */
-      transform: translate(-50%, -50%); /* Center the spinner */
-      z-index: 9999; /* Ensure spinner appears on top of other elements */
-      display: none; /* Hide spinner by default */
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-</style>
-
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9289428933728345" data-overlays="bottom"
-    crossorigin="anonymous"></script>
-
-    <meta name="google-adsense-account" content="ca-pub-9289428933728345">
-    
+        /* Inline CSS */
+        #clear-button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff4d4d;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        #clear-button:hover {
+            background-color: #ff1a1a;
+        }
+        #filter-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4d79ff;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        #filter-button:hover {
+            background-color: #1a53ff;
+        }
+        #filter-options {
+            display: none;
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            max-width: 300px;
+            overflow-y: auto;
+        }
+        .filter-option {
+            margin-bottom: 10px;
+        }
+        .filter-option input {
+            margin-right: 5px;
+        }
+        #select-all-button, #deselect-all-button {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        #select-all-button {
+            background-color: #4CAF50;
+        }
+        #deselect-all-button {
+            background-color: #f44336;
+        }
+    </style>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-YZSY213Y4T"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-YZSY213Y4T');
-</script>
-<body>    
+<body>
     <div id="search-container">
         <div id="search-bar">
-            <!-- Search Input with Autocomplete -->
-            <input type="text" id="game-search" placeholder="Search for a game..." data-list="">
-            <!-- Search Button with Magnifying Glass Icon -->
+            <input type="text" id="game-search" placeholder="Search for games..." data-list="">
+            <input type="hidden" id="selected-games">
+            <div id="selected-games-display">0 Games Selected</div>
+            <button id="clear-button">Clear</button>
             <button id="search-button" onclick="search()"><i class="fas fa-search"></i></button>
-            <!-- Loading Spinner for Map -->
             <div id="map-loading-spinner" class="spinner"></div>
         </div>
     </div>
+
     <div id="map-container">
         <div id="map"></div>
     </div>
+
+    <button id="filter-button" onclick="toggleFilterOptions()">Filter</button>
+
+    <div id="filter-options">
+        <div>
+            <button id="select-all-button" onclick="selectAllFilters()">Select All</button>
+            <button id="deselect-all-button" onclick="deselectAllFilters()">Deselect All</button>
+        </div>
+        
+        <div class="filter-option">
+            <input type="checkbox" id="filter-gold" checked> Master + / Master (Gold)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-grey" checked> Challenger (Grey)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-black" checked> 96+ attendees (Black)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-violet" checked> 64+ attendees (Violet)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-red" checked> 48+ attendees (Red)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-orange" checked> 32+ attendees (Orange)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-yellow" checked> 24+ attendees (Yellow)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-green" checked> 16+ attendees (Green)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-white" checked> Under 16 attendees (White)
+        </div>
+        <div class="filter-option">
+            <input type="checkbox" id="filter-blue" checked> Over 2 weeks away (Blue)
+        </div>
+    </div>
+
     <!-- Include your app.js file -->
-    <script src="app.js"></script>      
+    <script src="app.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            autocompleteSearch();
+            document.getElementById('clear-button').addEventListener('click', clearSelectedGames);
+
+            // Add event listeners to checkboxes
+            const checkboxes = document.querySelectorAll('#filter-options .filter-option input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateFilters);
+            });
+
+            // Initialize the filters based on checkbox states
+            updateFilters();
+        });
+
+        function toggleFilterOptions() {
+            const filterOptions = document.getElementById('filter-options');
+            filterOptions.style.display = (filterOptions.style.display === 'none' || filterOptions.style.display === '') ? 'block' : 'none';
+        }
+
+        function selectAllFilters() {
+            const checkboxes = document.querySelectorAll('#filter-options .filter-option input[type="checkbox"]');
+            checkboxes.forEach(checkbox => checkbox.checked = true);
+            updateFilters();
+        }
+
+        function deselectAllFilters() {
+            const checkboxes = document.querySelectorAll('#filter-options .filter-option input[type="checkbox"]');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+            updateFilters();
+        }
+
+        function updateFilters() {
+            const filterStates = {
+                'marker-icon-gold.png': document.getElementById('filter-gold').checked,
+                'marker-icon-grey.png': document.getElementById('filter-grey').checked,
+                'marker-icon-black.png': document.getElementById('filter-black').checked,
+                'marker-icon-violet.png': document.getElementById('filter-violet').checked,
+                'marker-icon-red.png': document.getElementById('filter-red').checked,
+                'marker-icon-orange.png': document.getElementById('filter-orange').checked,
+                'marker-icon-yellow.png': document.getElementById('filter-yellow').checked,
+                'marker-icon-green.png': document.getElementById('filter-green').checked,
+                'marker-icon-white.png': document.getElementById('filter-white').checked,
+                'marker-icon-blue.png': document.getElementById('filter-blue').checked
+            };
+
+            for (const [iconFile, show] of Object.entries(filterStates)) {
+                filterByIcon(iconFile, show);
+            }
+        }
+
+        function filterByIcon(iconFile, show) {
+            allMarkers.forEach(marker => {
+                const iconUrl = marker.options.icon.options.iconUrl;
+                if (iconUrl.includes(iconFile)) {
+                    if (show && !map.hasLayer(marker)) {
+                        map.addLayer(marker);
+                    } else if (!show && map.hasLayer(marker)) {
+                        map.removeLayer(marker);
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
