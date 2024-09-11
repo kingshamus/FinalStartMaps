@@ -6,23 +6,6 @@ html, body {
     font-family: Arial, sans-serif;
 }
 
-#banner-ad {
-    width: 468px;
-    height: 60px; /* Make sure the container has a fixed height */
-    margin: 0 auto; /* Center the ad */
-    text-align: center;
-    position: relative;
-    top: 0;
-    background-color: #f3f3f3; /* Optional, to visualize the ad container */
-}
-
-#banner-ad iframe {
-    width: 468px;
-    height: 60px;
-    border: none; /* Ensure no borders reduce the iframe size */
-}
-
-
 #search-container {
     position: absolute;
     top: 20px;
@@ -39,31 +22,7 @@ html, body {
     border-radius: 5px;
     padding: 5px 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 40%; /* Default width for larger screens */
-}
-
-/* Media query for screens 768px wide or smaller */
-@media (max-width: 768px) {
-    #search-bar {
-        width: 90%; /* Adjusted width for smaller screens */
-        flex-direction: column; /* Stack elements vertically */
-    }
-
-    #game-search {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    #search-button, #clear-button {
-        width: 100%;
-        margin: 5px 0;
-    }
-
-    #selected-games-display {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 10px;
-    }
+    width: 40%; /* Fixed width for the search bar */
 }
 
 #game-search {
@@ -82,17 +41,6 @@ html, body {
     color: white;
     cursor: pointer;
     margin-left: 10px;
-}
-
-#clear-button {
-    margin-left: 10px;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-    background-color: #ff4d4d;
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
 }
 
 #map-container {
@@ -130,6 +78,7 @@ html, body {
     100% { transform: rotate(360deg); }
 }
 
+/* Custom styles for autocomplete items */
 .autocomplete-items {
     position: absolute;
     border: 1px solid #d4d4d4;
