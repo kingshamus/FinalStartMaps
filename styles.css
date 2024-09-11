@@ -5,6 +5,14 @@ html, body {
     overflow: hidden; /* Prevent scrollbars */
     font-family: Arial, sans-serif;
 }
+#banner-ad {
+    width: 468px;
+    height: 60px;
+    margin: 0 auto; /* Center the ad */
+    text-align: center; /* Ensure the ad is centered */
+    position: relative;
+    top: 0; /* Ensure it stays at the top */
+}
 
 #search-container {
     position: absolute;
