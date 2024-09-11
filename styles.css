@@ -5,14 +5,23 @@ html, body {
     overflow: hidden; /* Prevent scrollbars */
     font-family: Arial, sans-serif;
 }
+
 #banner-ad {
     width: 468px;
-    height: 60px;
+    height: 60px; /* Make sure the container has a fixed height */
     margin: 0 auto; /* Center the ad */
-    text-align: center; /* Ensure the ad is centered */
+    text-align: center;
     position: relative;
-    top: 0; /* Ensure it stays at the top */
+    top: 0;
+    background-color: #f3f3f3; /* Optional, to visualize the ad container */
 }
+
+#banner-ad iframe {
+    width: 468px;
+    height: 60px;
+    border: none; /* Ensure no borders reduce the iframe size */
+}
+
 
 #search-container {
     position: absolute;
