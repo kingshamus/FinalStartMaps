@@ -231,8 +231,6 @@ async function displayData(gameId) {
             // Determine the icon color based on the tournament category
             let iconColor;
             const numAttendeesGroup = tournaments.reduce((acc, curr) => acc + curr.numAttendees, 0);
-            if (tournaments.some(tournament => tournament.name.toLowerCase().includes("ball"))) {
-                iconColor = 'ball'; // Use the ball.png icon
             if (tournaments.some(tournament => ["evo japan 2024", "evo 2024"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
                 iconColor = 'gold'; // Master + Gold
             } else if (tournaments.some(tournament => ["paradise game battle 2024", "combo breaker 2024", "battle arena melbourne 2024", "tgu 2024", "punishment 2", "the mixup 2024", "ceo 2024", "atl super tournament 2024", "vsfighting xii", "emirates showdown 2024"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
