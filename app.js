@@ -231,7 +231,7 @@ async function displayData(gameId) {
             // Determine the icon color based on the tournament category
             let iconColor;
             const numAttendeesGroup = tournaments.reduce((acc, curr) => acc + curr.numAttendees, 0);
-            if (tournaments.some(tournament => tournament.name.toLowerCase().includes("ball"))) {
+            if (tournaments.some(tournament => tournament.name.toLowerCase().includes("tekken ball"))) {
                 iconColor = 'ball'; // Use the ball.png icon
             } else if (tournaments.some(tournament => ["evo japan 2024", "evo 2024"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
                 iconColor = 'gold'; // Master + Gold
