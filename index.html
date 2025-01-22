@@ -24,8 +24,10 @@
             <input type="text" id="game-search" placeholder="Search for games..." data-list="">
             <input type="hidden" id="selected-games">
             <div id="selected-games-display">0 Games Selected</div>
-            <button id="clear-button">Clear</button>
-            <button id="search-button" onclick="search()"><i class="fas fa-search"></i></button>
+            <div class="button-container">
+            <button id="clear-button" onclick="window.location.reload()">Clear</button>
+            <button id="search-button" onclick="search()">Search</button>
+            </div>
             <div id="map-loading-spinner" class="spinner"></div>
         </div>
     </div>

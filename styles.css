@@ -15,14 +15,25 @@ html, body {
     z-index: 1000;
 }
 
+/* Search Bar */
 #search-bar {
     display: flex;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 5px;
-    padding: 5px 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 80%; /* Increased default width for better touch interaction on small screens */
+    align-items: centre;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+    width: 50%; /* Centre width */
+    max-width: 600px;
+    min-width: 300px;
+    box-sizing: border-box;
+}
+
+/* Button Container */
+.button-container {
+    display: flex;
+    margin-left: auto; /* Push buttons to the right */
+    gap: 10px; /* Add spacing between buttons */
 }
 
 /* Adjustments for mobile devices */
@@ -36,12 +47,14 @@ html, body {
         width: 100%;
         margin-bottom: 10px;
         padding: 10px; /* Larger padding for easier touch */
+        align-items: right;
     }
 
     #search-button, #clear-button {
         width: 100%;
         margin: 5px 0;
         padding: 10px; /* Larger padding on buttons for better touch interaction */
+        align-items: right;
     }
 
     #selected-games-display {
@@ -81,6 +94,7 @@ html, body {
     color: white;
     cursor: pointer;
     margin-left: 10px;
+    align-items: right;
 }
 
 #clear-button {
@@ -92,6 +106,7 @@ html, body {
     color: white;
     font-size: 14px;
     cursor: pointer;
+    align-items: right;
 }
 
 #clear-button:hover {
