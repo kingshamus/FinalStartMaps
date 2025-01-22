@@ -181,7 +181,7 @@ html, body {
 #filter-options {
     display: none;
     position: fixed;
-    top: 50px;
+    top: 50px; /* Adjust based on screen size */
     right: 10px;
     background-color: white;
     padding: 15px;
@@ -190,14 +190,25 @@ html, body {
     z-index: 1000;
     max-width: 300px;
     overflow-y: auto;
+    max-height: calc(100vh - 100px); /* Prevent overflow on small screens */
 }
 
-.filter-option {
-    margin-bottom: 10px;
-}
+@media (max-width: 768px) {
+    #filter-button {
+        position: fixed;
+        top: auto; /* Move to the bottom for better visibility */
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 15px; /* Ensure it's not too small for touch */
+    }
 
-.filter-option input {
-    margin-right: 5px;
+    #filter-options {
+        top: auto; /* Position above the filter button on mobile */
+        bottom: 70px; /* Space for the button below */
+        right: 20px;
+        max-width: 90%; /* Make it wider on mobile for better visibility */
+        max-height: calc(100vh - 120px); /* Adjust max height for smaller screens */
+    }
 }
 
 #select-all-button, #deselect-all-button {
