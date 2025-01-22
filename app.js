@@ -148,8 +148,6 @@ async function fetchData(videogameId) {
     }
 }
 
-const allMarkers = [];
-
 // Function to display data on the map
 async function displayData(gameId) {
     try {
@@ -663,6 +661,75 @@ async function autocompleteSearch() {
         console.error(`Error setting up autocomplete: ${error.message}`);
     }
 }
+
+// Global variable to store all markers
+const allMarkers = [];
+
+// Function to toggle filter options visibility
+function toggleFilterOptions() {
+    const filterOptions = document.getElementById('filter-options');
+    filterOptions.style.display = (filterOptions.style.display === 'none' || filterOptions.style.display === '') ? 'block' : 'none';
+}
+
+// Function to select all filters
+function selectAllFilters() {
+    const checkboxes = document.querySelectorAll('#filter-options .filter-option input[type="checkbox"]');
+    checkboxes.forEach(checkbox => checkbox.checked = true);
+    updateFilters();
+}
+
+// Function to deselect all filters
+function deselectAllFilters() {
+    const checkboxes = document.querySelectorAll('#filter-options .filter-option input[type="checkbox"]');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    updateFilters();
+}
+
+// Function to update filters based on checkbox states
+function updateFilters() {
+    const filterStates = {
+        'marker-icon-gold.png': document.getElementById('filter-gold').checked,
+        'marker-icon-grey.png': document.getElementById('filter-grey').checked,
+        'marker-icon-black.png': document.getElementById('filter-black').checked,
+        'marker-icon-violet.png': document.getElementById('filter-violet').checked,
+        'marker-icon-red.png': document.getElementById('filter-red').checked,
+        'marker-icon-orange.png': document.getElementById('filter-orange').checked,
+        'marker-icon-yellow.png': document.getElementById('filter-yellow').checked,
+        'marker-icon-green.png': document.getElementById('filter-green').checked,
+        'marker-icon-white.png': document.getElementById('filter-white').checked,
+        'marker-icon-blue.png': document.getElementById('filter-blue').checked
+    };
+
+    for (const [iconFile, show] of Object.entries(filterStates)) {
+        filterByIcon(iconFile, show);
+    }
+}
+
+// Function to filter markers by icon
+function filterByIcon(iconFile, show) {
+    allMarkers.forEach(marker => {
+        const iconUrl = marker.options.icon.options.iconUrl;
+        if (iconUrl.includes(iconFile)) {
+            if (show && !map.hasLayer(marker)) {
+                map.addLayer(marker);
+            } else if (!show && map.hasLayer(marker)) {
+                map.removeLayer(marker);
+            }
+        }
+    });
+}
+
+// Event listener for when the DOM content is loaded
+document.addEventListener("DOMContentLoaded", function () {
+    // Add event listeners to checkboxes
+    const checkboxes = document.querySelectorAll('#filter-options .filter-option input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateFilters);
+    });
+
+    // Initialize the filters based on checkbox states
+    updateFilters();
+});
 
 // Call the function to set up autocomplete
 autocompleteSearch();
