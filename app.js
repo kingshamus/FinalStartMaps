@@ -68,7 +68,6 @@ function requestLocationAndZoom() {
     }
 }
 
-
 // Call requestLocationAndZoom when the page is loaded
 document.addEventListener("DOMContentLoaded", function () {
     requestLocationAndZoom();
@@ -97,29 +96,33 @@ async function fetchData(videogameId) {
                 headers: headers,
                 body: JSON.stringify({
                     query: `
-                      query TournamentsByVideogame($perPage: Int!, $page: Int!, $videogameId: ID!) {
-                        tournaments(query: {
-                          perPage: $perPage
-                          page: $page
-                          sortBy: "startAt asc"
-                          filter: {
-                            upcoming: true
-                            videogameIds: [
-                              $videogameId
-                            ]
-                          }
-                        }) {
-                          nodes {
-                            name
-                            url
-                            lat
-                            lng
-                            isRegistrationOpen
-                            numAttendees
-                            startAt
-                          }
-                        }
-                      }
+query TournamentsByVideogame($perPage: Int!, $page: Int!, $videogameId: ID!) {
+  tournaments(query: {
+    perPage: $perPage
+    page: $page
+    sortBy: "startAt asc"
+    filter: {
+      upcoming: true
+      videogameIds: [
+        $videogameId
+      ]
+    }
+  }) {
+    nodes {
+      name
+      url
+      lat
+      lng
+      isRegistrationOpen
+      numAttendees
+      startAt
+      images {
+        type
+        url
+      }
+    }
+  }
+}
                     `,
                     variables: {
                         "perPage": 300,
@@ -134,6 +137,7 @@ async function fetchData(videogameId) {
             }
 
             const json_data = await response.json();
+            console.log('Raw API Response:', JSON.stringify(json_data, null, 2)); // New log for debugging
             const tournaments = json_data.data.tournaments.nodes;
 
             const filteredTournaments = tournaments.filter(tournament => tournament.isRegistrationOpen !== false);
@@ -154,16 +158,16 @@ async function displayData(gameId) {
         const data = await fetchData(gameId);
         const groupedTournaments = {};
 
-                // Assume you already have a list of video games with their names and IDs
-                const videoGames = await fetchVideoGames();
-                const selectedGame = videoGames.find(game => game.id === gameId);
-                const gameName = selectedGame ? selectedGame.name : 'Unknown Game';
+        // Assume you already have a list of video games with their names and IDs
+        const videoGames = await fetchVideoGames();
+        const selectedGame = videoGames.find(game => game.id === gameId);
+        const gameName = selectedGame ? selectedGame.name : 'Unknown Game';
 
         // Get current timestamp
         const currentTime = new Date().getTime();
 
         data.forEach(tournament => {
-            const { name, lat, lng, startAt, url, numAttendees } = tournament;
+            const { name, lat, lng, startAt, url, numAttendees, images } = tournament;
 
             // Check if lat and lng are valid numbers and not null
             const latNum = parseFloat(lat);
@@ -192,7 +196,8 @@ async function displayData(gameId) {
                     lng: lngNum,
                     startAt,
                     url,
-                    numAttendees
+                    numAttendees,
+                    images
                 });
             } else {
                 console.error(`Invalid lat/lng values or null for tournament: ${name}`);
@@ -210,7 +215,6 @@ async function displayData(gameId) {
                 map.closePopup(popup);
             }, 10000); // Close popup after 10 seconds
         }
-
 
         // Display markers for each group of tournaments
         Object.values(groupedTournaments).forEach(group => {
@@ -237,46 +241,75 @@ async function displayData(gameId) {
                 iconColor = 'gold'; // Master
             } else if (tournaments.some(tournament => ["electric clash 2024", "only the best 2024", "ufa 2024", "3f - fight for the future", "second wind 2024", "thunderstruck 2024", "brussels challenge 2024", "fv major 2024", "clash of the olympians 2024", "dreamhack dallas 2024", "crossover 2024", "cape town showdown 2024", "hado fight festival", "moor1ng"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
                 iconColor = 'grey'; // Challenger
-            } else  if (withinNext14Days) {
-                    if (numAttendeesGroup >= 96) {
-                        iconColor = 'black'; // 96 attendees Black
-                    } else if (numAttendeesGroup >= 64) {
-                        iconColor = 'violet'; // 64 attendees Violet
-                    } else if (numAttendeesGroup >= 48) {
-                        iconColor = 'red'; // 48 attendees Red
-                    } else if (numAttendeesGroup >= 32) {
-                        iconColor = 'orange'; // 32 attendees Orange
-                    } else if (numAttendeesGroup >= 24) {
-                        iconColor = 'yellow'; // 24 attendees Yellow
-                    } else if (numAttendeesGroup >= 16) {
-                        iconColor = 'green'; // 16 attendees Green
-                    } else {
-                        iconColor = 'white'; // Under attendees 16 White
-                    }
+            } else if (withinNext14Days) {
+                if (numAttendeesGroup >= 96) {
+                    iconColor = 'black'; // 96 attendees Black
+                } else if (numAttendeesGroup >= 64) {
+                    iconColor = 'violet'; // 64 attendees Violet
+                } else if (numAttendeesGroup >= 48) {
+                    iconColor = 'red'; // 48 attendees Red
+                } else if (numAttendeesGroup >= 32) {
+                    iconColor = 'orange'; // 32 attendees Orange
+                } else if (numAttendeesGroup >= 24) {
+                    iconColor = 'yellow'; // 24 attendees Yellow
+                } else if (numAttendeesGroup >= 16) {
+                    iconColor = 'green'; // 16 attendees Green
                 } else {
-                    iconColor = 'blue'; // Over 2 weeks away Blue
+                    iconColor = 'white'; // Under attendees 16 White
                 }
+            } else {
+                iconColor = 'blue'; // Over 2 weeks away Blue
+            }
 
             const marker = L.marker([avgLat, avgLng]).addTo(map);
             allMarkers.push(marker);
 
-// Assuming 'gameName' is included in the tournament data from autofill
-// If there are multiple tournaments at the same location, create a popup showing all of them
-if (tournaments.length > 1) {
-    let popupContent = '<ul>';
-    tournaments.forEach(tournament => {
-        // Access the game name from the tournament or autofill data
-        const gameName = tournament.gameName || 'Unknown Game'; // Adjust based on how gameName is stored
-        popupContent += `<li><b>${tournament.name}</b><br>Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()}<br><a href="https://start.gg${tournament.url}" target="_blank">Sign Up Link</a><br>Attendees: ${tournament.numAttendees}</li>`;
-    });
-    popupContent += '</ul>';
-    marker.bindPopup(popupContent);
-} else {
-    // If there's only one tournament at the location, create a normal popup
-    const { name, startAt, url, numAttendees, gameName } = tournaments[0];
-    marker.bindPopup(`<b>${name}</b><br>Starts at: ${new Date(startAt * 1000).toLocaleString()}UTC<br><a href="https://start.gg${url}" target="_blank">Sign Up Link</a><br>Attendees: ${numAttendees}`);
-}
-
+            if (tournaments.length > 1) {
+                let popupContent = '<ul>';
+                tournaments.forEach(tournament => {
+                    const imageUrl = Array.isArray(tournament.images) 
+                        ? tournament.images.find(img => img.type.toLowerCase() === 'profile')?.url || 'No Image'
+                        : 'No Image';
+            
+                    const imageElement = imageUrl !== 'No Image' 
+                        ? `<img src="${imageUrl}" onerror="this.style.display='none'" style="width: 100px; height: 100px; object-fit: cover;">`
+                        : '<img src="/path/to/default-image.jpg" alt="No Image Available" style="width: 100px; height: 100px; object-fit: cover;">';
+            
+                    popupContent += `<li style="display: flex; align-items: center;">
+                        ${imageElement}
+                        <div style="margin-left: 10px;">
+                            <b>${tournament.name}</b>
+                            <br>Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()}
+                            <br>Attendees: ${tournament.numAttendees}
+                            <br><a href="https://start.gg${tournament.url}" target="_blank">Register</a>
+                        </div>
+                    </li>`;
+                });
+                popupContent += '</ul>';
+                marker.bindPopup(popupContent);
+            } else {
+                // If there's only one tournament at the location, create a normal popup
+                const { name, startAt, url, numAttendees, images } = tournaments[0];
+                const imageUrl = Array.isArray(images) 
+                    ? images.find(img => img.type.toLowerCase() === 'profile')?.url || 'No Image'
+                    : 'No Image';
+            
+                const imageElement = imageUrl !== 'No Image' 
+                    ? `<img src="${imageUrl}" onerror="this.style.display='none'" style="width: 100px; height: 100px; object-fit: cover;">`
+                    : '<img src="/path/to/default-image.jpg" alt="No Image Available" style="width: 100px; height: 100px; object-fit: cover;">';
+            
+                marker.bindPopup(`
+                    <div style="display: flex; align-items: center;">
+                        ${imageElement}
+                        <div style="margin-left: 10px;">
+                            <b>${name}</b>
+                            <br>Starts at: ${new Date(startAt * 1000).toLocaleString()}UTC
+                            <br>Attendees: ${numAttendees}
+                            <br><a href="https://start.gg${url}" target="_blank">Register</a>
+                        </div>
+                    </div>
+                `);
+            }
 
             // Set marker icon color
             marker.setIcon(L.icon({
