@@ -241,6 +241,10 @@ async function displayData(gameId) {
                 iconColor = 'gold'; // Master
             } else if (tournaments.some(tournament => ["electric clash 2024", "only the best 2024", "ufa 2024", "3f - fight for the future", "second wind 2024", "thunderstruck 2024", "brussels challenge 2024", "fv major 2024", "clash of the olympians 2024", "dreamhack dallas 2024", "crossover 2024", "cape town showdown 2024", "hado fight festival", "moor1ng"].some(keyword => tournament.name.toLowerCase().includes(keyword.toLowerCase())))) {
                 iconColor = 'grey'; // Challenger
+            } else if (numAttendeesGroup > 255) {
+                iconColor = 'gold'; // Tournaments with over 255 attendees
+                } else if (numAttendeesGroup > 127) {
+                iconColor = 'grey'; // Tournaments with over 127 attendees
             } else if (withinNext14Days) {
                 if (numAttendeesGroup >= 96) {
                     iconColor = 'black'; // 96 attendees Black
@@ -342,11 +346,11 @@ legendControl.onAdd = function(map) {
                 <ul>
                     <li>
                         <input type="checkbox" id="checkbox-gold" class="pin-checkbox" checked>
-                        <label for="checkbox-gold"><img class="legend-icon" src="custom pin/marker-icon-gold.png"> Master +, Master</label>
+                        <label for="checkbox-gold"><img class="legend-icon" src="custom pin/marker-icon-gold.png"> 256+ attendees</label>
                     </li>
                     <li>
                         <input type="checkbox" id="checkbox-grey" class="pin-checkbox" checked>
-                        <label for="checkbox-grey"><img class="legend-icon" src="custom pin/marker-icon-grey.png"> Challenger</label>
+                        <label for="checkbox-grey"><img class="legend-icon" src="custom pin/marker-icon-grey.png"> 128+ attendees</label>
                     </li>
                     <li>
                         <input type="checkbox" id="checkbox-black" class="pin-checkbox" checked>
