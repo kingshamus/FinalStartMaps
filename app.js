@@ -286,6 +286,7 @@ async function displayData(gameId) {
                             <br>Starts at: ${new Date(tournament.startAt * 1000).toLocaleString()}
                             <br>Attendees: ${tournament.numAttendees}
                             <br><a href="https://start.gg${tournament.url}" target="_blank">Register</a>
+                            <br><a href="https://twitter.com/intent/tweet?text=I'm signing up for ${encodeURIComponent(tournament.name)} via startmaps.xyz&url=${encodeURIComponent(`https://start.gg${tournament.url}`)}" target="_blank">Tweet</a>
                         </div>
                     </li>`;
                 });
@@ -310,6 +311,7 @@ async function displayData(gameId) {
                             <br>Starts at: ${new Date(startAt * 1000).toLocaleString()}UTC
                             <br>Attendees: ${numAttendees}
                             <br><a href="https://start.gg${url}" target="_blank">Register</a>
+                            <br><a href="https://twitter.com/intent/tweet?text=I'm signing up for ${encodeURIComponent(name)} via startmaps.xyz&url=${encodeURIComponent(`https://start.gg${url}`)}" target="_blank">Tweet</a>
                         </div>
                     </div>
                 `);
