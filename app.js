@@ -484,27 +484,79 @@ async function fetchVideoGames() {
     }
 }
 
+// New function to generate abbreviations
+function generateAbbreviation(name) {
+    if (!name || typeof name !== 'string') {
+        console.error("Invalid game name:", name);
+        return '';
+    }
+
+    name = name.trim().toLowerCase();
+    let abbreviation = '';
+
+    // Handle numbered titles (e.g., "Mortal Kombat 1" -> "MK1")
+    const numberedMatch = name.match(/^(.*?)\s+(\d+)$/);
+    if (numberedMatch) {
+        const words = numberedMatch[1].split(/\s+/);
+        abbreviation = words.map(word => word[0]).join('') + numberedMatch[2];
+    } else {
+        // Default: First letter of each word (e.g., "Super Smash Bros Ultimate" -> "SSBU")
+        abbreviation = name.split(/\s+/).map(word => word[0]).join('');
+    }
+
+    return abbreviation.toUpperCase();
+}
+
+// Updated autocomplete search with abbreviation support
 async function autocompleteSearch() {
     try {
         const videoGames = await fetchVideoGames();
         const input = document.getElementById('game-search');
-        const selectedGames = new Set(); // Use a Set to store selected game IDs
+        
+        // Create an augmented list with full names, abbreviations, and IDs
+        const augmentedList = videoGames.map(game => ({
+            fullName: game.name,
+            abbreviation: generateAbbreviation(game.name),
+            id: game.id
+        }));
 
-        // Initialize Awesomplete autocomplete
+        // Initialize Awesomplete
         new Awesomplete(input, {
-            list: videoGames.map(game => game.name),
+            list: augmentedList.map(item => item.fullName), // Display full names only
             autoFirst: true,
-            filter: Awesomplete.FILTER_STARTSWITH
+            filter: function(text, inputValue) {
+                const normalizedInput = inputValue.trim().toLowerCase();
+                const game = augmentedList.find(item => item.fullName === text);
+                if (!game) return false;
+
+                // Match either full name or abbreviation
+                return (
+                    game.fullName.toLowerCase().includes(normalizedInput) ||
+                    game.abbreviation.toLowerCase().includes(normalizedInput)
+                );
+            },
+            replace: function(text) {
+                this.input.value = text; // Show full name in input after selection
+            }
         });
 
         input.addEventListener('awesomplete-selectcomplete', function(event) {
-            const selectedGameName = event.text.value;
-            const game = videoGames.find(g => g.name === selectedGameName);
-            if (game) {
-                selectedGames.add(game.id);
+            const selectedText = event.text.value; // Full name from suggestion
+            const selectedGame = augmentedList.find(
+                g => g.fullName === selectedText || g.abbreviation.toLowerCase() === selectedText.toLowerCase()
+            );
+            if (selectedGame) {
+                selectedGames.add(selectedGame.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
+                input.value = selectedGame.fullName; // Display full name
+                search(); // Trigger search after selection
+            } else {
+                console.error("Selected game not found:", selectedText);
             }
         });
+
+        // Initialize display
+        updateSelectedGamesDisplay(videoGames, selectedGames);
 
     } catch (error) {
         console.error('Error in autocompleteSearch:', error);
