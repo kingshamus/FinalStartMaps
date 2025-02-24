@@ -490,33 +490,24 @@ async function autocompleteSearch() {
         const input = document.getElementById('game-search');
         const selectedGames = new Set();
 
-        // Function to generate abbreviation dynamically
-        function generateAbbreviation(name) {
-            return name
-                .split(/\s+/) // Split by spaces
-                .map(word => word[0]) // Get the first letter of each word
-                .join('') // Join into an abbreviation
-                .toUpperCase(); // Convert to uppercase for consistency
-        }
+        // Generate a list that includes full names and their abbreviations
+        const augmentedList = videoGames.flatMap(game => {
+            const abbreviation = generateAbbreviation(game.name);
+            return [
+                { name: game.name, id: game.id }, // Full name
+                { name: abbreviation, id: game.id } // Abbreviation
+            ];
+        });
 
-        // Initialize Awesomplete with custom filtering
+        // Initialize Awesomplete with the augmented list
         new Awesomplete(input, {
-            list: videoGames.map(game => game.name),
-            autoFirst: true,
-            filter: function(text, input) {
-                input = input.toUpperCase();
-                return videoGames.some(game => 
-                    game.name.toUpperCase().includes(input) || 
-                    generateAbbreviation(game.name).includes(input)
-                );
-            }
+            list: augmentedList.map(item => item.name),
+            autoFirst: true
         });
 
         input.addEventListener('awesomplete-selectcomplete', function(event) {
             const selectedText = event.text.value;
-            const game = videoGames.find(g => 
-                g.name === selectedText || generateAbbreviation(g.name) === selectedText
-            );
+            const game = augmentedList.find(g => g.name === selectedText);
             if (game) {
                 selectedGames.add(game.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
@@ -526,6 +517,15 @@ async function autocompleteSearch() {
     } catch (error) {
         console.error('Error in autocompleteSearch:', error);
     }
+}
+
+// Function to generate abbreviations dynamically
+function generateAbbreviation(name) {
+    return name
+        .split(/\s+/) // Split into words
+        .map(word => word[0]) // Get first letter of each word
+        .join('') // Join them into an abbreviation
+        .toUpperCase(); // Make it uppercase for consistency
 }
 
 // Define selectedGames globally or within a module scope
