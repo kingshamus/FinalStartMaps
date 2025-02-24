@@ -488,18 +488,23 @@ async function autocompleteSearch() {
         const input = document.getElementById('game-search');
         const selectedGames = new Set();
 
-        // Use only game names in the visible list, but allow abbreviation search
-        new Awesomplete(input, {
-            list: videoGames.map(game => game.name),
+        const awesome = new Awesomplete(input, {
+            list: videoGames.map(game => game.name), // Display names in dropdown
             autoFirst: true,
-            filter: (text, input) => {
-                const searchTerm = input.toLowerCase();
-                const game = videoGames.find(g => g.name === text);
-                return text.toLowerCase().startsWith(searchTerm) || 
+            minChars: 1, // Start filtering with 1 character
+            filter: function(text, input) {
+                const searchTerm = input.trim().toLowerCase();
+                const game = videoGames.find(g => g.name === text); // Find the game object for this text
+                if (!game) return false;
+                
+                // Check if search term matches start of name or abbreviation
+                return game.name.toLowerCase().startsWith(searchTerm) ||
                        game.abbreviation.toLowerCase().startsWith(searchTerm);
-            }
+            },
+            sort: false // Preserve original order, or customize if needed
         });
 
+        // Event listener for when a suggestion is selected
         input.addEventListener('awesomplete-selectcomplete', function(event) {
             const selectedGameName = event.text.value;
             const game = videoGames.find(g => g.name === selectedGameName);
@@ -508,6 +513,13 @@ async function autocompleteSearch() {
                 updateSelectedGamesDisplay(videoGames, selectedGames);
             }
             input.value = ''; // Clear input after selection
+        });
+
+        // Optional: Ensure input focus reopens suggestions
+        input.addEventListener('focus', function() {
+            if (this.value) {
+                awesome.evaluate();
+            }
         });
 
         updateSelectedGamesDisplay(videoGames, selectedGames);
