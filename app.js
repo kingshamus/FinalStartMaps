@@ -473,12 +473,10 @@ async function fetchVideoGames() {
         // Extract the list of video games from the response
         const videoGames = data.entities.videogame;
 
-        // Map over the list to include id, name, and abbreviations
+        // Map over the list of video games to extract id and name fields
         return videoGames.map(game => ({
             id: game.id,
-            name: game.name,
-            displayName: game.displayName,
-            abbreviation: game.abbreviation || [] // Default to empty array if no abbreviations
+            name: game.name
         }));
     } catch (error) {
         console.error(`Error fetching video games data: ${error.message}`);
@@ -492,49 +490,21 @@ async function autocompleteSearch() {
         const input = document.getElementById('game-search');
         const selectedGames = new Set(); // Use a Set to store selected game IDs
 
-        // Prepare the autocomplete list with name, displayName, and abbreviation
-        const searchList = videoGames.flatMap(game => {
-            // Include name, displayName, and abbreviation, avoiding duplicates
-            const entries = new Set([game.name, game.displayName, game.abbreviation]);
-            return Array.from(entries).map(entry => ({
-                label: entry, // What the user types/sees (e.g., "SSBM", "Melee", or "Super Smash Bros. Melee")
-                value: game.name, // Full name for consistency (shown after selection)
-                id: game.id // Game ID for tracking
-            }));
-        });
-
         // Initialize Awesomplete autocomplete
         new Awesomplete(input, {
-            list: searchList,
+            list: videoGames.map(game => game.name),
             autoFirst: true,
-            filter: function(text, input) {
-                // Case-insensitive match at the start of the string
-                return Awesomplete.FILTER_STARTSWITH(text.label.toLowerCase(), input.toLowerCase());
-            },
-            item: function(text, input) {
-                // Render the suggestion (shows label in dropdown)
-                return Awesomplete.ITEM(text.label, input);
-            },
-            replace: function(text) {
-                // Show the full game name in the input after selection
-                this.input.value = text.value;
-            }
+            filter: Awesomplete.FILTER_STARTSWITH
         });
 
-        // Handle selection
         input.addEventListener('awesomplete-selectcomplete', function(event) {
-            const selectedEntry = event.text; // {label, value, id}
-            const gameId = selectedEntry.id;
-            if (gameId) {
-                selectedGames.add(gameId);
+            const selectedGameName = event.text.value;
+            const game = videoGames.find(g => g.name === selectedGameName);
+            if (game) {
+                selectedGames.add(game.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
-                // Clear input after selection to allow another search
-                input.value = '';
             }
         });
-
-        // Initialize display with empty set
-        updateSelectedGamesDisplay(videoGames, selectedGames);
 
     } catch (error) {
         console.error('Error in autocompleteSearch:', error);
@@ -689,12 +659,10 @@ async function fetchVideoGames() {
         // Extract the list of video games from the response
         const videoGames = data.entities.videogame;
 
-        // Map over the list to include id, name, and abbreviations
+        // Map over the list of video games to extract id and name fields
         return videoGames.map(game => ({
             id: game.id,
-            name: game.name,
-            displayName: game.displayName,
-            abbreviation: game.abbreviation || [] // Default to empty array if no abbreviations
+            name: game.name
         }));
     } catch (error) {
         console.error(`Error fetching video games data: ${error.message}`);
@@ -709,44 +677,19 @@ async function autocompleteSearch() {
         const input = document.getElementById('game-search');
         const selectedGames = new Set(); // Use a Set to store selected game IDs
 
-        // Prepare the autocomplete list with name, displayName, and abbreviation
-        const searchList = videoGames.flatMap(game => {
-            // Include name, displayName, and abbreviation, avoiding duplicates
-            const entries = new Set([game.name, game.displayName, game.abbreviation]);
-            return Array.from(entries).map(entry => ({
-                label: entry, // What the user types/sees (e.g., "SSBM", "Melee", or "Super Smash Bros. Melee")
-                value: game.name, // Full name for consistency (shown after selection)
-                id: game.id // Game ID for tracking
-            }));
-        });
-
         // Initialize Awesomplete autocomplete
         new Awesomplete(input, {
-            list: searchList,
+            list: videoGames.map(game => game.name),
             autoFirst: true,
-            filter: function(text, input) {
-                // Case-insensitive match at the start of the string
-                return Awesomplete.FILTER_STARTSWITH(text.label.toLowerCase(), input.toLowerCase());
-            },
-            item: function(text, input) {
-                // Render the suggestion (shows label in dropdown)
-                return Awesomplete.ITEM(text.label, input);
-            },
-            replace: function(text) {
-                // Show the full game name in the input after selection
-                this.input.value = text.value;
-            }
+            filter: Awesomplete.FILTER_STARTSWITH
         });
 
-        // Handle selection
         input.addEventListener('awesomplete-selectcomplete', function(event) {
-            const selectedEntry = event.text; // {label, value, id}
-            const gameId = selectedEntry.id;
-            if (gameId) {
-                selectedGames.add(gameId);
+            const selectedGameName = event.text.value;
+            const game = videoGames.find(g => g.name === selectedGameName);
+            if (game) {
+                selectedGames.add(game.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
-                // Clear input after selection to allow another search
-                input.value = '';
             }
         });
 
@@ -754,7 +697,7 @@ async function autocompleteSearch() {
         updateSelectedGamesDisplay(videoGames, selectedGames);
 
     } catch (error) {
-        console.error('Error in autocompleteSearch:', error);
+        console.error(`Error setting up autocomplete: ${error.message}`);
     }
 }
 
@@ -828,4 +771,4 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Call the function to set up autocomplete
-Search();
+autocompleteSearch();
