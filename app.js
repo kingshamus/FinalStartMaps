@@ -470,13 +470,11 @@ async function fetchVideoGames() {
         }
         const data = await response.json();
 
-        // Extract the list of video games from the response
-        const videoGames = data.entities.videogame;
-
-        // Map over the list of video games to extract id and name fields
-        return videoGames.map(game => ({
+        // Extract video games with id, name, and abbreviation
+        return data.entities.videogame.map(game => ({
             id: game.id,
-            name: game.name
+            name: game.name,
+            abbreviation: game.abbreviation
         }));
     } catch (error) {
         console.error(`Error fetching video games data: ${error.message}`);
@@ -488,13 +486,18 @@ async function autocompleteSearch() {
     try {
         const videoGames = await fetchVideoGames();
         const input = document.getElementById('game-search');
-        const selectedGames = new Set(); // Use a Set to store selected game IDs
+        const selectedGames = new Set();
 
-        // Initialize Awesomplete autocomplete
+        // Use only game names in the visible list, but allow abbreviation search
         new Awesomplete(input, {
             list: videoGames.map(game => game.name),
             autoFirst: true,
-            filter: Awesomplete.FILTER_STARTSWITH
+            filter: (text, input) => {
+                const searchTerm = input.toLowerCase();
+                const game = videoGames.find(g => g.name === text);
+                return text.toLowerCase().startsWith(searchTerm) || 
+                       game.abbreviation.toLowerCase().startsWith(searchTerm);
+            }
         });
 
         input.addEventListener('awesomplete-selectcomplete', function(event) {
@@ -504,7 +507,10 @@ async function autocompleteSearch() {
                 selectedGames.add(game.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
             }
+            input.value = ''; // Clear input after selection
         });
+
+        updateSelectedGamesDisplay(videoGames, selectedGames);
 
     } catch (error) {
         console.error('Error in autocompleteSearch:', error);
