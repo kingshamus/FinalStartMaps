@@ -486,19 +486,28 @@ async function fetchVideoGames() {
 
 async function autocompleteSearch() {
     try {
+        // Fetch video games data first
         const videoGames = await fetchVideoGames();
-        const input = document.getElementById('game-search');
-        const selectedGames = new Set();
 
-        // Generate a list that includes full names and their abbreviations
+        // Generate abbreviations for each game before loading the autocomplete
         const augmentedList = videoGames.map(game => {
-            const abbreviation = generateAbbreviation(game.name);
-            return {
-                fullName: game.name,
-                abbreviation: abbreviation,
-                id: game.id
-            };
-        });
+            try {
+                const abbreviation = generateAbbreviation(game.name);
+                if (!abbreviation) {
+                    console.warn(`No abbreviation generated for game: ${game.name}`);
+                }
+                return {
+                    fullName: game.name,
+                    abbreviation: abbreviation,
+                    id: game.id
+                };
+            } catch (error) {
+                console.error(`Error generating abbreviation for ${game.name}:`, error);
+                return null; // Continue even if one game has an issue
+            }
+        }).filter(item => item !== null); // Remove null entries if any errors occurred during abbreviation generation
+
+        console.log("Augmented list of games with abbreviations:", augmentedList); // Debug log to check if abbreviations were created
 
         // Initialize Awesomplete with the custom filter
         new Awesomplete(input, {
@@ -520,6 +529,8 @@ async function autocompleteSearch() {
             if (selectedGame) {
                 selectedGames.add(selectedGame.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
+            } else {
+                console.error("Selected game not found in augmented list:", selectedText);
             }
         });
 
@@ -530,11 +541,47 @@ async function autocompleteSearch() {
 
 // Function to generate abbreviations dynamically
 function generateAbbreviation(name) {
-    return name
+    if (!name) {
+        console.error("Invalid game name received for abbreviation generation:", name);
+        return ''; // Return empty string if the name is invalid
+    }
+
+    const abbreviation = name
         .split(/\s+/) // Split into words
         .map(word => word[0]) // Get first letter of each word
         .join('') // Join them into an abbreviation
         .toUpperCase(); // Make it uppercase for consistency
+
+    if (!abbreviation) {
+        console.warn(`No abbreviation generated for name: ${name}`);
+    }
+
+    console.log(`Generated abbreviation for ${name}: ${abbreviation}`); // Debug log for abbreviation generation
+
+    return abbreviation;
+}
+
+// Fetch video games data for search bar autocomplete
+async function fetchVideoGames() {
+    try {
+        const response = await fetch(smashGGEndpoint);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Extract the list of video games from the response
+        const videoGames = data.entities.videogame;
+
+        // Map over the list of video games to extract id and name fields
+        return videoGames.map(game => ({
+            id: game.id,
+            name: game.name
+        }));
+    } catch (error) {
+        console.error(`Error fetching video games data: ${error.message}`);
+        throw error;
+    }
 }
 
 // Define selectedGames globally or within a module scope
