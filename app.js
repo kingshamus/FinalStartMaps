@@ -488,18 +488,35 @@ async function autocompleteSearch() {
     try {
         const videoGames = await fetchVideoGames();
         const input = document.getElementById('game-search');
-        const selectedGames = new Set(); // Use a Set to store selected game IDs
+        const selectedGames = new Set();
 
-        // Initialize Awesomplete autocomplete
+        // Function to generate abbreviation dynamically
+        function generateAbbreviation(name) {
+            return name
+                .split(/\s+/) // Split by spaces
+                .map(word => word[0]) // Get the first letter of each word
+                .join('') // Join into an abbreviation
+                .toUpperCase(); // Convert to uppercase for consistency
+        }
+
+        // Initialize Awesomplete with custom filtering
         new Awesomplete(input, {
             list: videoGames.map(game => game.name),
             autoFirst: true,
-            filter: Awesomplete.FILTER_STARTSWITH
+            filter: function(text, input) {
+                input = input.toUpperCase();
+                return videoGames.some(game => 
+                    game.name.toUpperCase().includes(input) || 
+                    generateAbbreviation(game.name).includes(input)
+                );
+            }
         });
 
         input.addEventListener('awesomplete-selectcomplete', function(event) {
-            const selectedGameName = event.text.value;
-            const game = videoGames.find(g => g.name === selectedGameName);
+            const selectedText = event.text.value;
+            const game = videoGames.find(g => 
+                g.name === selectedText || generateAbbreviation(g.name) === selectedText
+            );
             if (game) {
                 selectedGames.add(game.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
