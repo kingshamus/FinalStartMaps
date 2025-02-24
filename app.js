@@ -492,15 +492,17 @@ async function autocompleteSearch() {
             list: videoGames.map(game => game.name), // Display names in dropdown
             autoFirst: true,
             minChars: 1, // Start filtering with 1 character
-            filter: function(text, input) {
-                const searchTerm = input.trim().toLowerCase();
-                const game = videoGames.find(g => g.name === text); // Find the game object for this text
-                if (!game) return false;
-                
-                // Check if search term matches start of name or abbreviation
-                return game.name.toLowerCase().startsWith(searchTerm) ||
-                       game.abbreviation.toLowerCase().startsWith(searchTerm);
-            },
+filter: function(text, input) {
+    const searchTerm = input.trim().toLowerCase();
+    const game = videoGames.find(g => g.name === text); // Find the game object for this text
+    if (!game) return false;
+
+    const nameMatch = game.name.toLowerCase().startsWith(searchTerm);
+    const abbreviationMatch = game.abbreviation && game.abbreviation.toLowerCase().startsWith(searchTerm);
+
+    // Match either name or abbreviation
+    return nameMatch || abbreviationMatch;
+},
             sort: false // Preserve original order, or customize if needed
         });
 
