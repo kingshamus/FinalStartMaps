@@ -470,11 +470,13 @@ async function fetchVideoGames() {
         }
         const data = await response.json();
 
-        // Extract video games with id, name, and abbreviation
-        return data.entities.videogame.map(game => ({
+        // Extract the list of video games from the response
+        const videoGames = data.entities.videogame;
+
+        // Map over the list of video games to extract id and name fields
+        return videoGames.map(game => ({
             id: game.id,
-            name: game.name,
-            abbreviation: game.abbreviation
+            name: game.name
         }));
     } catch (error) {
         console.error(`Error fetching video games data: ${error.message}`);
@@ -486,27 +488,15 @@ async function autocompleteSearch() {
     try {
         const videoGames = await fetchVideoGames();
         const input = document.getElementById('game-search');
-        const selectedGames = new Set();
+        const selectedGames = new Set(); // Use a Set to store selected game IDs
 
-        const awesome = new Awesomplete(input, {
-            list: videoGames.map(game => game.name), // Display names in dropdown
+        // Initialize Awesomplete autocomplete
+        new Awesomplete(input, {
+            list: videoGames.map(game => game.name),
             autoFirst: true,
-            minChars: 1, // Start filtering with 1 character
-filter: function(text, input) {
-    const searchTerm = input.trim().toLowerCase();
-    const game = videoGames.find(g => g.name === text); // Find the game object for this text
-    if (!game) return false;
-
-    const nameMatch = game.name.toLowerCase().startsWith(searchTerm);
-    const abbreviationMatch = game.abbreviation && game.abbreviation.toLowerCase().startsWith(searchTerm);
-
-    // Match either name or abbreviation
-    return nameMatch || abbreviationMatch;
-},
-            sort: false // Preserve original order, or customize if needed
+            filter: Awesomplete.FILTER_STARTSWITH
         });
 
-        // Event listener for when a suggestion is selected
         input.addEventListener('awesomplete-selectcomplete', function(event) {
             const selectedGameName = event.text.value;
             const game = videoGames.find(g => g.name === selectedGameName);
@@ -514,17 +504,7 @@ filter: function(text, input) {
                 selectedGames.add(game.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
             }
-            input.value = ''; // Clear input after selection
         });
-
-        // Optional: Ensure input focus reopens suggestions
-        input.addEventListener('focus', function() {
-            if (this.value) {
-                awesome.evaluate();
-            }
-        });
-
-        updateSelectedGamesDisplay(videoGames, selectedGames);
 
     } catch (error) {
         console.error('Error in autocompleteSearch:', error);
