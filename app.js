@@ -486,101 +486,28 @@ async function fetchVideoGames() {
 
 async function autocompleteSearch() {
     try {
-        // Fetch video games data first
         const videoGames = await fetchVideoGames();
+        const input = document.getElementById('game-search');
+        const selectedGames = new Set(); // Use a Set to store selected game IDs
 
-        // Generate abbreviations for each game before loading the autocomplete
-        const augmentedList = videoGames.map(game => {
-            try {
-                const abbreviation = generateAbbreviation(game.name);
-                if (!abbreviation) {
-                    console.warn(`No abbreviation generated for game: ${game.name}`);
-                }
-                return {
-                    fullName: game.name,
-                    abbreviation: abbreviation,
-                    id: game.id
-                };
-            } catch (error) {
-                console.error(`Error generating abbreviation for ${game.name}:`, error);
-                return null; // Continue even if one game has an issue
-            }
-        }).filter(item => item !== null); // Remove null entries if any errors occurred during abbreviation generation
-
-        console.log("Augmented list of games with abbreviations:", augmentedList); // Debug log to check if abbreviations were created
-
-        // Initialize Awesomplete with the custom filter
+        // Initialize Awesomplete autocomplete
         new Awesomplete(input, {
-            list: augmentedList.map(item => item.fullName), // Display the full names initially
+            list: videoGames.map(game => game.name),
             autoFirst: true,
-            filter: function(text, input) {
-                const normalizedInput = input.trim().toLowerCase();
-                return augmentedList.filter(item => {
-                    const fullMatch = item.fullName.toLowerCase().includes(normalizedInput);
-                    const abbreviationMatch = item.abbreviation.toLowerCase().includes(normalizedInput);
-                    return fullMatch || abbreviationMatch;
-                }).map(item => item.fullName); // Return matching full names
-            }
+            filter: Awesomplete.FILTER_STARTSWITH
         });
 
         input.addEventListener('awesomplete-selectcomplete', function(event) {
-            const selectedText = event.text.value;
-            const selectedGame = augmentedList.find(g => g.fullName === selectedText || g.abbreviation === selectedText);
-            if (selectedGame) {
-                selectedGames.add(selectedGame.id);
+            const selectedGameName = event.text.value;
+            const game = videoGames.find(g => g.name === selectedGameName);
+            if (game) {
+                selectedGames.add(game.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
-            } else {
-                console.error("Selected game not found in augmented list:", selectedText);
             }
         });
 
     } catch (error) {
         console.error('Error in autocompleteSearch:', error);
-    }
-}
-
-// Function to generate abbreviations dynamically
-function generateAbbreviation(name) {
-    if (!name) {
-        console.error("Invalid game name received for abbreviation generation:", name);
-        return ''; // Return empty string if the name is invalid
-    }
-
-    const abbreviation = name
-        .split(/\s+/) // Split into words
-        .map(word => word[0]) // Get first letter of each word
-        .join('') // Join them into an abbreviation
-        .toUpperCase(); // Make it uppercase for consistency
-
-    if (!abbreviation) {
-        console.warn(`No abbreviation generated for name: ${name}`);
-    }
-
-    console.log(`Generated abbreviation for ${name}: ${abbreviation}`); // Debug log for abbreviation generation
-
-    return abbreviation;
-}
-
-// Fetch video games data for search bar autocomplete
-async function fetchVideoGames() {
-    try {
-        const response = await fetch(smashGGEndpoint);
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-
-        // Extract the list of video games from the response
-        const videoGames = data.entities.videogame;
-
-        // Map over the list of video games to extract id and name fields
-        return videoGames.map(game => ({
-            id: game.id,
-            name: game.name
-        }));
-    } catch (error) {
-        console.error(`Error fetching video games data: ${error.message}`);
-        throw error;
     }
 }
 
