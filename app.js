@@ -491,25 +491,34 @@ async function autocompleteSearch() {
         const selectedGames = new Set();
 
         // Generate a list that includes full names and their abbreviations
-        const augmentedList = videoGames.flatMap(game => {
+        const augmentedList = videoGames.map(game => {
             const abbreviation = generateAbbreviation(game.name);
-            return [
-                { name: game.name, id: game.id }, // Full name
-                { name: abbreviation, id: game.id } // Abbreviation
-            ];
+            return {
+                fullName: game.name,
+                abbreviation: abbreviation,
+                id: game.id
+            };
         });
 
-        // Initialize Awesomplete with the augmented list
+        // Initialize Awesomplete with the custom filter
         new Awesomplete(input, {
-            list: augmentedList.map(item => item.name),
-            autoFirst: true
+            list: augmentedList.map(item => item.fullName), // Display the full names initially
+            autoFirst: true,
+            filter: function(text, input) {
+                const normalizedInput = input.trim().toLowerCase();
+                return augmentedList.filter(item => {
+                    const fullMatch = item.fullName.toLowerCase().includes(normalizedInput);
+                    const abbreviationMatch = item.abbreviation.toLowerCase().includes(normalizedInput);
+                    return fullMatch || abbreviationMatch;
+                }).map(item => item.fullName); // Return matching full names
+            }
         });
 
         input.addEventListener('awesomplete-selectcomplete', function(event) {
             const selectedText = event.text.value;
-            const game = augmentedList.find(g => g.name === selectedText);
-            if (game) {
-                selectedGames.add(game.id);
+            const selectedGame = augmentedList.find(g => g.fullName === selectedText || g.abbreviation === selectedText);
+            if (selectedGame) {
+                selectedGames.add(selectedGame.id);
                 updateSelectedGamesDisplay(videoGames, selectedGames);
             }
         });
